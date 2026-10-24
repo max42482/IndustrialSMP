@@ -120,7 +120,7 @@ public final class ResourcePackHost implements Listener {
                     "{\"textures\":{\"particle\":\"" + Models.METAL + "\"}}");
             for (Map.Entry<String, Models.Model> m : Models.all().entrySet()) {
                 put(out, "assets/oneblock/models/item/" + m.getKey() + ".json", Models.modelJson(m.getValue()));
-                put(out, "assets/oneblock/items/" + m.getKey() + ".json", Models.itemJson(m.getKey()));
+                put(out, "assets/oneblock/items/" + m.getKey() + ".json", Models.itemJson(m.getKey(), m.getValue()));
             }
         }
         return bytes.toByteArray();

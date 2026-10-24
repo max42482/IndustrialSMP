@@ -31,13 +31,25 @@ final class Goggles {
 
     String info(KineticPart part) {
         return switch (part.type) {
-            case FLUID_TANK -> "<gold>Fluid Tank <dark_gray>| " + kinetics.tanks.describe(kinetics.tanks.column(part));
+            case FLUID_TANK -> {
+                Tanks.Group g = kinetics.tanks.group(part);
+                int heat = kinetics.boilers.level(g);
+                yield "<gold>Fluid Tank <dark_gray>| " + kinetics.tanks.describe(g)
+                        + (heat > 0 ? " <dark_gray>| <gray>Boiler up to level <white>" + heat : "");
+            }
+            case MECHANICAL_PUMP -> part.speed == 0 && (part.network == null || part.network.problem == Network.Problem.NONE)
+                    ? "<gold>Mechanical Pump <dark_gray>| <gray>Turn it with a cogwheel next to it or a shaft into its side"
+                    : describe(part) + " <dark_gray>| <gray>Pumping " + part.facing
+                    .name().toLowerCase(Locale.ROOT);
+            case GENERATOR -> kinetics.generators.status(part) + " <dark_gray>| " + kinetics.energy.describe(part);
             case BLAZE_BURNER -> {
                 Boilers.Burner b = kinetics.boilers.burner(part);
                 yield "<gold>Blaze Burner <dark_gray>| " + (b.burn <= 0 ? "<gray>Out of fuel"
                         : (b.superheated ? "<light_purple>Superheated" : "<gold>Burning") + " <gray>for <white>" + Text.duration(b.burn * 50L));
             }
-            case STEAM_ENGINE -> describe(part) + " <dark_gray>| <gray>Boiler level <white>" + part.boilerLevel;
+            case STEAM_ENGINE -> describe(part) + " <dark_gray>| <gray>Boiler level <white>" + part.boilerLevel
+                    + (part.boilerEngines > 1 ? " <gray>shared by <white>" + part.boilerEngines + " <gray>engines" : "")
+                    + (part.boilerLevel == 0 ? " <red>Needs water and heat" : "");
             case ACCUMULATOR, CONNECTOR, CABLE -> "<gold>" + part.type.displayName + " <dark_gray>| " + kinetics.energy.describe(part);
             case ALTERNATOR, ELECTRIC_MOTOR -> describe(part) + " <dark_gray>| " + kinetics.energy.describe(part);
             default -> describe(part);

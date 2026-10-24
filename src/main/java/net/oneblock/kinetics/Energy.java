@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 final class Energy {
@@ -75,10 +74,23 @@ final class Energy {
         return b;
     }
 
+    void showCharge(KineticPart acc) {
+        if (acc.visual == null) {
+            return;
+        }
+        float f = Math.round(20f * battery(acc).stored / kinetics.config.accumulatorCapacity) / 20f;
+        Vector3f offset = new Vector3f(0, -(1 - f) * 5 / 16f, 0);
+        Vector3f scale = new Vector3f(1, Math.max(0.001f, f), 1);
+        for (int i = 1; i <= 4; i++) {
+            acc.visual.custom(i, 0, offset, scale, 10);
+        }
+    }
+
     private void setStored(KineticPart acc, long value) {
         battery(acc).stored = value;
         acc.extra = value <= 0 ? "" : Long.toString(value);
         acc.dirty = true;
+        showCharge(acc);
     }
 
     List<KineticPart> partners(KineticPart connector) {
@@ -174,6 +186,7 @@ final class Energy {
         net.stored = 0;
         net.capacity = 0;
         List<KineticPart> batteries = new ArrayList<>();
+        List<KineticPart> generators = new ArrayList<>();
         for (KineticPart p : net.parts) {
             switch (p.type) {
                 case ALTERNATOR -> net.production += Math.abs(p.speed) * kinetics.config.fePerRpm;
@@ -183,9 +196,18 @@ final class Energy {
                     net.stored += battery(p).stored;
                     net.capacity += kinetics.config.accumulatorCapacity;
                 }
+                case GENERATOR -> generators.add(p);
                 default -> {
                 }
             }
+        }
+        boolean useful = net.demand > net.production || net.stored < net.capacity;
+        for (KineticPart g : generators) {
+            boolean on = useful && kinetics.generators.burn(g, INTERVAL);
+            if (on) {
+                net.production += kinetics.config.generatorFe;
+            }
+            kinetics.generators.setOn(g, on);
         }
         long made = Math.round(net.production * INTERVAL);
         long used = Math.round(net.demand * INTERVAL);

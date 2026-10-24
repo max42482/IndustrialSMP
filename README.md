@@ -21,14 +21,14 @@ Jar ends up in `build/libs/`. Vault is optional.
 - Transmission: shaft, cogwheels, gearbox, clutch, gearshift, belts
 - Machines: drill, millstone, crushing wheels, press, encased fan, depot, funnel
 - Fluids and storage: pipe, mechanical pump, fluid tank, item vault, steam engine, blaze burner
-- Electricity: alternator, electric motor, accumulator, cable, connector, wire spool
+- Electricity: alternator, generator, electric motor, accumulator, cable, connector, wire spool
 - Info: speedometer, stressometer, engineer's goggles
 
 Ore doubling works too: crush raw ore, then smelt it or wash it with a fan.
 
-**Fluids and storage.** Pipes connect by themselves to pumps, tanks, chests, vaults and machines. A powered pump moves fluids and items from the pipes behind it to the pipes in front. Fluid tanks hold 8 buckets per block and stack. Item vaults hold 54 stacks. Put a steam engine on the side of a water tank with heat under it (fire, lava, a blaze burner) for big power.
+**Fluids and storage.** Pipes connect by themselves to pumps, tanks, chests, vaults and machines, and you can see fluid and items moving through their glass windows. A pump moves fluids and items the way its arrows point. Turn it with a cogwheel next to it or a shaft into its side, and sneak + right-click it to turn it around. Fluid tanks hold 8 buckets per block, and tanks touching each other join into one big tank. Tanks can hold XP too: sneak + right-click with an empty hand to store yours, right-click to take a level back, or use glass bottles. A tank with XP in it pulls in nearby XP orbs. Item vaults hold 54 stacks and join up the same way. Put a steam engine on the side of a water tank with heat under it (fire, lava, blaze burners) for big power. Every burner under a big tank adds heat, and engines on the same tank share it.
 
-**Electricity.** Alternators turn rotation into FE, electric motors turn FE back into rotation (you lose half on the way). Anything electric that touches connects, cables carry power block to block, and a wire spool strings power lines between connectors up to 16 blocks apart. Accumulators store the extra.
+**Electricity.** Alternators turn rotation into FE, generators burn fuel or lava for FE, electric motors turn FE back into rotation (you lose half on the way). Anything electric that touches connects, cables carry power block to block, and a wire spool strings power lines between connectors up to 16 blocks apart. Accumulators store the extra.
 
 Recipes are locked at first. You earn cogs from milestones and spend them in `/is unlocks`.
 
@@ -44,7 +44,7 @@ Recipes are locked at first. You earn cogs from milestones and spend them in `/i
 | `/orders`, `/ah`, `/collect` | Trading |
 | `/sidebar` | Toggle the scoreboard |
 | `/eco` | Admin money stuff |
-| `/kinetics give\|demo\|at\|place\|windmill` | Admin machine stuff |
+| `/kinetics give\|demo\|at\|place\|fill\|windmill` | Admin machine stuff |
 | `/is admin create\|progress\|info\|tp` | Admin island stuff |
 
 ## Config

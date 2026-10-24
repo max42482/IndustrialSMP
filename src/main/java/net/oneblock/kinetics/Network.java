@@ -22,6 +22,9 @@ public final class Network {
     final double stress;
     final Problem problem;
     final double wouldBeSpeed;
+    double phase;
+    double base;
+    long since;
 
     Network(List<KineticPart> parts, double capacity, double stress, Problem problem, double wouldBeSpeed) {
         this.parts = parts;
@@ -29,6 +32,10 @@ public final class Network {
         this.stress = stress;
         this.problem = problem;
         this.wouldBeSpeed = wouldBeSpeed;
+    }
+
+    double angle(double ratio, long tick) {
+        return ratio * (phase + base * 0.3 * (tick - since));
     }
 
     public int size() {

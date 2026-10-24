@@ -35,6 +35,9 @@ public final class KineticPart {
     int crankDirection = 1;
     double waterSpeed;
     int boilerLevel;
+    int boilerEngines = 1;
+    double ratio = 1;
+    int shape = -1;
     boolean energized;
     float drillProgress;
     long drillTarget = Long.MIN_VALUE;
@@ -108,7 +111,7 @@ public final class KineticPart {
                 faces.add(facing.getOppositeFace());
                 yield faces;
             }
-            case DEPOT, FUNNEL, FLUID_PIPE, FLUID_TANK, ITEM_VAULT, BLAZE_BURNER, ACCUMULATOR, CONNECTOR, CABLE -> List.of();
+            case DEPOT, FUNNEL, FLUID_PIPE, FLUID_TANK, ITEM_VAULT, BLAZE_BURNER, ACCUMULATOR, CONNECTOR, CABLE, GENERATOR -> List.of();
         };
     }
 
@@ -147,7 +150,7 @@ public final class KineticPart {
             case HAND_CRANK -> config.handCrankCapacity;
             case WATER_WHEEL -> config.waterWheelCapacity;
             case WINDMILL_BEARING -> config.windmillCapacity;
-            case STEAM_ENGINE -> config.steamCapacityPerLevel * boilerLevel;
+            case STEAM_ENGINE -> config.steamCapacityPerLevel * boilerLevel / Math.max(1, boilerEngines);
             case ELECTRIC_MOTOR -> config.motorCapacityPerRpm;
             default -> 0;
         };

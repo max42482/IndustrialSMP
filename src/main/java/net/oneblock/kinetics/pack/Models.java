@@ -1,5 +1,7 @@
 package net.oneblock.kinetics.pack;
 
+import org.bukkit.block.BlockFace;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +29,10 @@ public final class Models {
         }
     }
 
-    record Model(List<Box> boxes, float size) {
+    record Model(List<Box> boxes, float size, float[] tint) {
+        Model(List<Box> boxes, float size) {
+            this(boxes, size, null);
+        }
     }
 
     private Models() {
@@ -169,45 +174,168 @@ public final class Models {
     static final String WATER = "minecraft:block/water_still";
     static final String LAVA = "minecraft:block/lava_still";
 
-    private static List<Box> frame(String panel) {
-        List<Box> list = new ArrayList<>();
-        list.add(box(0, 0, 0, 16, 1, 16, COPPER));
-        list.add(box(0, 15, 0, 16, 16, 16, COPPER));
-        for (float[] c : new float[][]{{0, 0}, {14, 0}, {0, 14}, {14, 14}}) {
-            list.add(box(c[0], 1, c[1], c[0] + 2, 15, c[1] + 2, COPPER));
+    static final float[] WATER_TINT = {0.25f, 0.46f, 0.89f};
+    static final float[] XP_TINT = {0.55f, 0.95f, 0.2f};
+    private static final BlockFace[] SIDES = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
+
+    private static boolean has(int mask, BlockFace face) {
+        return (mask & (1 << face.ordinal())) != 0;
+    }
+
+    private static Box toward(BlockFace face, float lo, float hi, float a, float b, String texture) {
+        return switch (face) {
+            case NORTH -> box(lo, lo, 16 - b, hi, hi, 16 - a, texture);
+            case EAST -> box(a, lo, lo, b, hi, hi, texture);
+            case WEST -> box(16 - b, lo, lo, 16 - a, hi, hi, texture);
+            case UP -> box(lo, a, lo, hi, b, hi, texture);
+            case DOWN -> box(lo, 16 - b, lo, hi, 16 - a, hi, texture);
+            default -> box(lo, lo, a, hi, hi, b, texture);
+        };
+    }
+
+    private static BlockFace straight(int mask) {
+        for (BlockFace f : new BlockFace[]{BlockFace.SOUTH, BlockFace.EAST, BlockFace.UP}) {
+            if (mask == ((1 << f.ordinal()) | (1 << f.getOppositeFace().ordinal()))) {
+                return f;
+            }
         }
-        list.add(box(1, 1, 1, 15, 15, 15, panel));
+        return null;
+    }
+
+    private static List<Box> pipe(int mask, String fluid) {
+        List<Box> list = new ArrayList<>();
+        BlockFace line = straight(mask);
+        if (line != null) {
+            for (BlockFace f : new BlockFace[]{line, line.getOppositeFace()}) {
+                list.add(toward(f, 5.5f, 10.5f, 14, 16, COPPER));
+                list.add(toward(f, 6, 10, 11, 14, COPPER));
+            }
+            list.add(toward(line, 6, 10, 5, 11, GLASS));
+            if (fluid != null) {
+                list.add(toward(line, 6.4f, 9.6f, 0.1f, 15.9f, fluid));
+            }
+            return list;
+        }
+        list.add(box(5, 5, 5, 11, 11, 11, COPPER));
+        if (fluid != null) {
+            list.add(box(6.4f, 6.4f, 6.4f, 9.6f, 9.6f, 9.6f, fluid));
+        }
+        for (BlockFace f : BlockFace.values()) {
+            if (f.ordinal() > 5 || !has(mask, f)) {
+                continue;
+            }
+            list.add(toward(f, 6, 10, 11, 13.5f, GLASS));
+            list.add(toward(f, 5.5f, 10.5f, 13.5f, 16, COPPER));
+            if (fluid != null) {
+                list.add(toward(f, 6.4f, 9.6f, 9.6f, 15.9f, fluid));
+            }
+        }
+        return list;
+    }
+
+    private static List<Box> cable(int mask) {
+        List<Box> list = new ArrayList<>();
+        BlockFace line = straight(mask);
+        if (line != null) {
+            list.add(toward(line, 6.5f, 9.5f, 0, 16, RUBBER));
+            list.add(toward(line, 6, 10, 7, 9, COPPER));
+            return list;
+        }
+        list.add(box(6, 6, 6, 10, 10, 10, RUBBER));
+        for (BlockFace f : BlockFace.values()) {
+            if (f.ordinal() <= 5 && has(mask, f)) {
+                list.add(toward(f, 6.5f, 9.5f, 10, 16, RUBBER));
+            }
+        }
+        return list;
+    }
+
+    private static List<Box> shell(int mask, String panel) {
+        List<Box> list = new ArrayList<>();
+        boolean up = has(mask, BlockFace.UP);
+        boolean down = has(mask, BlockFace.DOWN);
+        float y0 = down ? 1 : 0;
+        float y1 = up ? 15 : 16;
+        if (up) {
+            list.add(box(0, 15, 0, 16, 16, 16, COPPER));
+        }
+        if (down) {
+            list.add(box(0, 0, 0, 16, 1, 16, COPPER));
+        }
+        for (BlockFace f : SIDES) {
+            if (!has(mask, f)) {
+                continue;
+            }
+            list.add(switch (f) {
+                case NORTH -> box(0.02f, y0, 0.3f, 15.98f, y1, 0.7f, panel);
+                case SOUTH -> box(0.02f, y0, 15.3f, 15.98f, y1, 15.7f, panel);
+                case EAST -> box(15.3f, y0, 0.02f, 15.7f, y1, 15.98f, panel);
+                default -> box(0.3f, y0, 0.02f, 0.7f, y1, 15.98f, panel);
+            });
+        }
+        for (int i = 0; i < SIDES.length; i++) {
+            BlockFace a = SIDES[i];
+            BlockFace b = SIDES[(i + 1) % SIDES.length];
+            if (has(mask, a) && has(mask, b)) {
+                float x = a == BlockFace.EAST || b == BlockFace.EAST ? 14 : 0;
+                float z = a == BlockFace.SOUTH || b == BlockFace.SOUTH ? 14 : 0;
+                list.add(box(x, y0, z, x + 2, y1, z + 2, COPPER));
+            }
+        }
+        if (list.isEmpty()) {
+            list.add(box(7.9f, 7.9f, 7.9f, 8.1f, 8.1f, 8.1f, COPPER));
+        }
         return list;
     }
 
     private static void phase5(Map<String, Model> m) {
-        List<Box> core = List.of(box(5, 5, 5, 11, 11, 11, COPPER));
-        List<Box> arm = List.of(box(6, 6, 11, 10, 10, 16, COPPER));
-        m.put("pipe_core", new Model(core, 16));
-        m.put("pipe_arm", new Model(arm, 16));
-        m.put("fluid_pipe", new Model(join(core, List.of(box(6, 6, 0, 10, 10, 5, COPPER), box(6, 6, 11, 10, 10, 16, COPPER))), 16));
+        for (int mask = 0; mask < 64; mask++) {
+            m.put("pipe_" + mask, new Model(pipe(mask, null), 16));
+            m.put("pipe_" + mask + "_water", new Model(pipe(mask, WATER), 16, WATER_TINT));
+            m.put("pipe_" + mask + "_xp", new Model(pipe(mask, WATER), 16, XP_TINT));
+            m.put("pipe_" + mask + "_lava", new Model(pipe(mask, LAVA), 16));
+            m.put("tank_" + mask, new Model(shell(mask, GLASS), 16));
+            m.put("vault_" + mask, new Model(shell(mask, IRON), 16));
+        }
+        int line = (1 << BlockFace.NORTH.ordinal()) | (1 << BlockFace.SOUTH.ordinal());
+        m.put("fluid_pipe", new Model(pipe(line, null), 16));
 
-        List<Box> pumpBody = List.of(
-                box(4, 4, 1, 12, 12, 15, COPPER),
-                box(3, 3, 0, 13, 13, 1, METAL),
-                box(3, 3, 15, 13, 13, 16, METAL));
-        List<Box> pumpCog = new ArrayList<>(disc(14, 7, 9, PLANKS, EIGHT));
+        List<Box> pumpBody = new ArrayList<>(List.of(
+                box(4, 4, 0, 12, 12, 2, METAL),
+                box(5, 5, 2, 11, 11, 14, COPPER),
+                box(4, 4, 14, 12, 12, 16, IRON)));
+        float[][] arrow = {{7.5f, 8.5f, 10, 12}, {6.5f, 9.5f, 12, 12.5f}, {7, 9, 12.5f, 13}, {7.5f, 8.5f, 13, 13.5f}};
+        for (float[] a : arrow) {
+            pumpBody.add(box(a[0], 11, a[2], a[1], 11.4f, a[3], IRON));
+            pumpBody.add(box(a[0], 4.6f, a[2], a[1], 5, a[3], IRON));
+            pumpBody.add(box(11, a[0], a[2], 11.4f, a[1], a[3], IRON));
+            pumpBody.add(box(4.6f, a[0], a[2], 5, a[1], a[3], IRON));
+        }
+        List<Box> pumpCog = new ArrayList<>(disc(10, 6, 10, PLANKS, SIXTEEN));
+        pumpCog.addAll(spokes(18, 3, 6.5f, 9.5f, WOOD, EIGHT));
         m.put("pump_body", new Model(pumpBody, 16));
         m.put("pump_cog", new Model(pumpCog, 16));
-        m.put("mechanical_pump", new Model(join(pumpBody, pumpCog), 16));
+        m.put("mechanical_pump", new Model(join(pumpBody, pumpCog), 18));
 
-        m.put("fluid_tank", new Model(frame(GLASS), 16));
-        m.put("item_vault", new Model(frame(IRON), 16));
+        m.put("fluid_tank", new Model(shell(63, GLASS), 16));
+        m.put("item_vault", new Model(shell(63, IRON), 16));
 
         List<Box> engineBody = List.of(
-                box(1, 1, 0, 15, 15, 3, METAL),
-                box(4, 3, 3, 12, 11, 11, COPPER),
-                box(7, 7, 11, 9, 9, 13, IRON));
-        List<Box> engineWheel = new ArrayList<>(disc(11, 13, 15, IRON, SIXTEEN));
-        engineWheel.add(box(6, 6, 15, 10, 10, 16, METAL));
+                box(1, 1, 0, 15, 15, 2, METAL),
+                box(4, 1, 2, 12, 7.5f, 8, METAL),
+                box(4, 8, 2, 12, 15, 10, COPPER),
+                box(3.5f, 7.5f, 3, 12.5f, 15.5f, 4, IRON),
+                box(3.5f, 7.5f, 7, 12.5f, 15.5f, 8, IRON));
+        List<Box> enginePiston = List.of(
+                box(7, 10.5f, 10, 9, 12.5f, 13, IRON),
+                box(6, 10, 12, 10, 13, 13.5f, METAL));
+        List<Box> engineWheel = new ArrayList<>(disc(14, 13.5f, 15.5f, IRON, SIXTEEN));
+        engineWheel.add(box(6, 6, 15.5f, 10, 10, 16, METAL));
+        engineWheel.add(box(7, 2, 15.5f, 9, 4, 16, METAL));
         m.put("engine_body", new Model(engineBody, 16));
+        m.put("engine_piston", new Model(enginePiston, 16));
         m.put("engine_wheel", new Model(engineWheel, 16));
-        m.put("steam_engine", new Model(join(engineBody, engineWheel), 16));
+        m.put("steam_engine", new Model(join(join(engineBody, enginePiston), engineWheel), 16));
 
         List<Box> burner = new ArrayList<>();
         burner.add(box(1, 0, 1, 15, 2, 15, METAL));
@@ -220,7 +348,8 @@ public final class Models {
         burner.add(box(13, 13, 3, 15, 14, 13, METAL));
         m.put("blaze_burner", new Model(burner, 16));
 
-        m.put("fluid_water", new Model(List.of(box(0, 0, 0, 16, 16, 16, WATER)), 16));
+        m.put("fluid_water", new Model(List.of(box(0, 0, 0, 16, 16, 16, WATER)), 16, WATER_TINT));
+        m.put("fluid_xp", new Model(List.of(box(0, 0, 0, 16, 16, 16, WATER)), 16, XP_TINT));
         m.put("fluid_lava", new Model(List.of(box(0, 0, 0, 16, 16, 16, LAVA)), 16));
         phase6(m);
     }
@@ -230,10 +359,10 @@ public final class Models {
     static final String REDSTONE = "minecraft:block/redstone_block";
 
     private static void phase6(Map<String, Model> m) {
-        List<Box> cableCore = List.of(box(6, 6, 6, 10, 10, 10, RUBBER));
-        m.put("cable_core", new Model(cableCore, 16));
-        m.put("cable_arm", new Model(List.of(box(6.5f, 6.5f, 10, 9.5f, 9.5f, 16, RUBBER)), 16));
-        m.put("cable", new Model(join(cableCore, List.of(box(6.5f, 6.5f, 0, 9.5f, 9.5f, 6, RUBBER), box(6.5f, 6.5f, 10, 9.5f, 9.5f, 16, RUBBER))), 16));
+        for (int mask = 0; mask < 64; mask++) {
+            m.put("cable_" + mask, new Model(cable(mask), 16));
+        }
+        m.put("cable", new Model(cable((1 << BlockFace.NORTH.ordinal()) | (1 << BlockFace.SOUTH.ordinal())), 16));
 
         m.put("connector", new Model(List.of(
                 box(5, 5, 0, 11, 11, 2, METAL),
@@ -267,15 +396,95 @@ public final class Models {
         m.put("motor_body", new Model(motor, 16));
         m.put("electric_motor", new Model(join(motor, shaft(14, 17)), 16));
 
-        List<Box> battery = new ArrayList<>(frame(REDSTONE));
+        List<Box> battery = new ArrayList<>();
+        battery.add(box(0, 0, 0, 16, 2, 16, METAL));
+        battery.add(box(0, 14, 0, 16, 16, 16, METAL));
+        battery.add(box(1, 2, 1, 15, 14, 15, IRON));
+        for (float[] c : new float[][]{{0, 0}, {14, 0}, {0, 14}, {14, 14}}) {
+            battery.add(box(c[0], 2, c[1], c[0] + 2, 14, c[1] + 2, COPPER));
+        }
+        battery.add(box(6, 3, 15, 10, 13, 15.1f, BLACK));
+        battery.add(box(6, 3, 0.9f, 10, 13, 1, BLACK));
+        battery.add(box(15, 3, 6, 15.1f, 13, 10, BLACK));
+        battery.add(box(0.9f, 3, 6, 1, 13, 10, BLACK));
         battery.add(box(3, 16, 3, 6, 17, 6, COPPER));
         battery.add(box(10, 16, 10, 13, 17, 13, IRON));
-        m.put("accumulator", new Model(battery, 16));
+        m.put("accumulator_body", new Model(battery, 16));
+        List<Box> bar = List.of(box(6.5f, 3, 15.1f, 9.5f, 13, 15.4f, REDSTONE));
+        m.put("accumulator_bar", new Model(bar, 16));
+        m.put("accumulator", new Model(join(battery, bar), 16));
 
         List<Box> spool = new ArrayList<>(disc(10, 3, 13, COPPER, EIGHT));
         spool.addAll(disc(14, 2, 3, PLANKS, EIGHT));
         spool.addAll(disc(14, 13, 14, PLANKS, EIGHT));
         m.put("wire_spool", new Model(spool, 14));
+        polish(m);
+    }
+
+    static final String BLACK = "minecraft:block/black_concrete";
+    static final String BIRCH = "minecraft:block/stripped_birch_log";
+    static final String MANGROVE = "minecraft:block/stripped_mangrove_log";
+    static final String PURPUR = "minecraft:block/purpur_block";
+    static final String AMETHYST = "minecraft:block/amethyst_block";
+    static final String FURNACE = "minecraft:block/blast_furnace_side";
+    static final String BARS = "minecraft:block/iron_bars";
+    static final String MAGMA = "minecraft:block/magma";
+
+    private static List<Box> casing(String panel, String frame) {
+        List<Box> list = new ArrayList<>();
+        list.add(box(0.5f, 0.5f, 0.5f, 15.5f, 15.5f, 15.5f, panel));
+        for (float a : new float[]{0, 14}) {
+            for (float b : new float[]{0, 14}) {
+                list.add(box(0, a, b, 16, a + 2, b + 2, frame));
+                list.add(box(a, 2, b, a + 2, 14, b + 2, frame));
+                list.add(box(a, b, 2, a + 2, b + 2, 14, frame));
+            }
+        }
+        return list;
+    }
+
+    private static void polish(Map<String, Model> m) {
+        List<Box> gearbox = casing(METAL, WOOD);
+        m.put("gearbox_casing", new Model(gearbox, 16));
+        List<Box> gearboxItem = new ArrayList<>(gearbox);
+        gearboxItem.addAll(shaft(-1, 17));
+        gearboxItem.addAll(yUp(shaft(-1, 17)));
+        m.put("gearbox", new Model(gearboxItem, 18));
+
+        List<Box> clutch = new ArrayList<>(casing(METAL, BIRCH));
+        clutch.add(box(0.2f, 0.2f, 7, 15.8f, 15.8f, 9, IRON));
+        m.put("clutch_casing", new Model(clutch, 16));
+        m.put("clutch", new Model(join(clutch, shaft(-1, 17)), 18));
+
+        List<Box> gearshift = new ArrayList<>(casing(METAL, MANGROVE));
+        gearshift.add(box(0.2f, 0.2f, 7, 15.8f, 15.8f, 9, REDSTONE));
+        m.put("gearshift_casing", new Model(gearshift, 16));
+        m.put("gearshift", new Model(join(gearshift, shaft(-1, 17)), 18));
+
+        List<Box> creative = List.of(
+                box(1, 1, 0, 15, 15, 10, PURPUR),
+                box(0.5f, 0.5f, 1, 15.5f, 15.5f, 3, AMETHYST),
+                box(0.5f, 0.5f, 6, 15.5f, 15.5f, 8, AMETHYST),
+                box(3, 3, 10, 13, 13, 12, METAL));
+        m.put("creative_motor_body", new Model(creative, 16));
+        m.put("creative_motor", new Model(join(creative, shaft(12, 17)), 16));
+
+        List<Box> generator = List.of(
+                box(0, 0, 0, 16, 2, 16, METAL),
+                box(1, 2, 1, 15, 14, 14, FURNACE),
+                box(1, 9, 14, 15, 14, 15, METAL),
+                box(1, 2, 14, 15, 3, 15, METAL),
+                box(1, 3, 14, 3, 9, 15, METAL),
+                box(13, 3, 14, 15, 9, 15, METAL),
+                box(3, 3, 14.6f, 13, 9, 14.8f, BARS),
+                box(2, 14, 2, 14, 15.5f, 12, COPPER),
+                box(3, 15.5f, 4, 5, 16.5f, 6, COPPER),
+                box(3, 15.5f, 8, 5, 16.5f, 10, IRON),
+                box(10.5f, 14, 11, 13.5f, 17, 14, IRON));
+        List<Box> glow = List.of(box(3, 3, 14.1f, 13, 9, 14.4f, MAGMA));
+        m.put("generator_body", new Model(generator, 16));
+        m.put("generator_glow", new Model(glow, 16));
+        m.put("generator", new Model(join(generator, glow), 16));
     }
 
     private static final float INSET = 0.04f;
@@ -403,8 +612,10 @@ public final class Models {
         return sb.toString();
     }
 
-    static String itemJson(String name) {
-        String tints = name.equals("fluid_water") ? ",\"tints\":[{\"type\":\"minecraft:constant\",\"value\":[0.25,0.46,0.89]}]" : "";
+    static String itemJson(String name, Model model) {
+        float[] t = model.tint();
+        String tints = t == null ? "" : ",\"tints\":[{\"type\":\"minecraft:constant\",\"value\":[" + num(t[0]) + "," + num(t[1]) + ","
+                + num(t[2]) + "]}]";
         return "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"oneblock:item/" + name + "\"" + tints + "}}";
     }
 

@@ -38,6 +38,7 @@ public final class KineticsCommand implements TabExecutor {
             case "place" -> placeCommand(sender, args);
             case "windmill" -> windmillCommand(sender, args);
             case "wire" -> wireCommand(sender, args);
+            case "fill" -> fillCommand(sender, args);
             case "stats" -> {
                 int parts = kinetics.registry.all().size();
                 long networks = kinetics.registry.all().stream().map(p -> p.network).filter(java.util.Objects::nonNull).distinct().count();
@@ -50,6 +51,7 @@ public final class KineticsCommand implements TabExecutor {
                 sender.sendMessage(Text.mm(" <white>/kinetics demo <dark_gray>- build a test machine next to you"));
                 sender.sendMessage(Text.mm(" <white>/kinetics demo water <dark_gray>- a water wheel with a waterfall"));
                 sender.sendMessage(Text.mm(" <white>/kinetics at [x] [y] [z] <dark_gray>- details of the part there"));
+                sender.sendMessage(Text.mm(" <white>/kinetics fill [x] [y] [z] [water|lava|xp|item] [amount] <dark_gray>- fill a tank or feed a machine"));
                 sender.sendMessage(Text.mm(" <white>/kinetics stats"));
             }
         }
@@ -150,6 +152,46 @@ public final class KineticsCommand implements TabExecutor {
         }
     }
 
+    private void fillCommand(CommandSender sender, String[] args) {
+        if (args.length < 6) {
+            Text.send(sender, "<red>Usage: /kinetics fill [x] [y] [z] [water|lava|xp|item] [amount] [world]");
+            return;
+        }
+        org.bukkit.World world = args.length >= 7 ? Bukkit.getWorld(args[6])
+                : sender instanceof Player p ? p.getWorld() : Bukkit.getWorlds().getFirst();
+        try {
+            int x = Integer.parseInt(args[1]);
+            int y = Integer.parseInt(args[2]);
+            int z = Integer.parseInt(args[3]);
+            int amount = Integer.parseInt(args[5]);
+            if (world != null) {
+                world.getChunkAt(x >> 4, z >> 4).load();
+            }
+            KineticPart part = world == null ? null : kinetics.registry.get(world, x, y, z);
+            if (part == null) {
+                Text.send(sender, "<red>No part there.");
+                return;
+            }
+            String what = args[4].toUpperCase(Locale.ROOT);
+            if (part.type == PartType.FLUID_TANK) {
+                Tanks.Fluid fluid = what.equals("XP") ? Tanks.Fluid.EXPERIENCE : Tanks.Fluid.valueOf(what);
+                Tanks.Group g = kinetics.tanks.group(part);
+                int filled = kinetics.tanks.fill(g, fluid, amount);
+                Text.send(sender, "<gray>Added " + filled + ". " + kinetics.tanks.describe(g));
+                return;
+            }
+            org.bukkit.Material material = org.bukkit.Material.matchMaterial(what);
+            if (material == null || !material.isItem()) {
+                Text.send(sender, "<red>Unknown item.");
+                return;
+            }
+            ItemStack left = kinetics.ports.insert(part.block(), new ItemStack(material, Math.clamp(amount, 1, 64)), org.bukkit.block.BlockFace.DOWN);
+            Text.send(sender, "<gray>Inserted " + (amount - (left == null ? 0 : left.getAmount())) + " " + what.toLowerCase(Locale.ROOT) + ".");
+        } catch (IllegalArgumentException e) {
+            Text.send(sender, "<red>Bad number or fluid.");
+        }
+    }
+
     private void at(CommandSender sender, String[] args) {
         if (args.length < 4) {
             Text.send(sender, "<red>Usage: /kinetics at [x] [y] [z]");
@@ -163,6 +205,7 @@ public final class KineticsCommand implements TabExecutor {
         }
         try {
             Block b = world.getBlockAt(Integer.parseInt(args[1]), Integer.parseInt(args[2]), Integer.parseInt(args[3]));
+            b.getChunk().load();
             KineticPart part = kinetics.partAt(b);
             if (part == null) {
                 Text.send(sender, "<red>No kinetic part there (block: " + b.getType() + ").");
@@ -224,7 +267,8 @@ public final class KineticsCommand implements TabExecutor {
         Network n = part.network;
         String orientation = part.type.orientation == PartType.Orientation.AXIS ? "axis " + part.axis : "facing " + part.facing;
         to.sendMessage(Text.mm(" <gray>" + orientation + (part.powered ? ", <red>powered" : "")
-                + ", speed <white>" + Goggles.rpm(part.speed) + "</white> RPM"));
+                + ", speed <white>" + Goggles.rpm(part.speed) + "</white> RPM"
+                + (part.type == PartType.FLUID_PIPE ? ", model <white>" + Pipes.model(part) : part.shape >= 0 ? ", shape <white>" + part.shape : "")));
         if (n != null) {
             to.sendMessage(Text.mm(" <gray>Network: <white>" + n.size() + "</white> parts, capacity <white>" + Goggles.su(n.capacity)
                     + "</white> SU, stress <white>" + Goggles.su(n.stress) + "</white> SU"
@@ -248,10 +292,13 @@ public final class KineticsCommand implements TabExecutor {
             to.sendMessage(Text.mm(" <gray>Holding: <white>" + Text.escape(String.join(", ", held))));
         }
         if (part.type == PartType.FLUID_TANK) {
-            to.sendMessage(Text.mm(" <gray>Tank: " + kinetics.tanks.describe(kinetics.tanks.column(part))));
+            to.sendMessage(Text.mm(" <gray>Tank: " + kinetics.tanks.describe(kinetics.tanks.group(part))));
         }
         if (part.type == PartType.STEAM_ENGINE) {
-            to.sendMessage(Text.mm(" <gray>Boiler level: <white>" + part.boilerLevel));
+            to.sendMessage(Text.mm(" <gray>Boiler level: <white>" + part.boilerLevel + " <gray>engines: <white>" + part.boilerEngines));
+        }
+        if (part.type == PartType.GENERATOR) {
+            to.sendMessage(Text.mm(" " + kinetics.generators.status(part)));
         }
         if (part.type.electric()) {
             to.sendMessage(Text.mm(" <gray>Energy: " + kinetics.energy.describe(part)));
@@ -388,7 +435,7 @@ public final class KineticsCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, String @NonNull [] args) {
         List<String> options = switch (args.length) {
-            case 1 -> List.of("give", "info", "demo", "stats", "at", "place");
+            case 1 -> List.of("give", "info", "demo", "stats", "at", "place", "fill");
             case 2 -> {
                 if (!args[0].equalsIgnoreCase("give")) {
                     yield List.of();

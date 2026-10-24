@@ -14,17 +14,17 @@ public enum PartType {
     LARGE_COGWHEEL("Large Cogwheel", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.SPRUCE_TRAPDOOR, "large_cogwheel",
             "Meshes with small cogwheels placed diagonally.",
             "Large to small = 2x speed, small to large = half speed."),
-    GEARBOX("Gearbox", Orientation.AXIS, Material.STRIPPED_SPRUCE_WOOD, Material.STRIPPED_SPRUCE_WOOD, null,
+    GEARBOX("Gearbox", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.STRIPPED_SPRUCE_WOOD, "gearbox",
             "Turns rotation 90 degrees to all four sides around it.",
             "Rotation going straight through is reversed."),
-    CLUTCH("Clutch", Orientation.AXIS, Material.STRIPPED_BIRCH_WOOD, Material.STRIPPED_BIRCH_WOOD, null,
+    CLUTCH("Clutch", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.STRIPPED_BIRCH_WOOD, "clutch",
             "A shaft that disconnects while powered by redstone."),
-    GEARSHIFT("Gearshift", Orientation.AXIS, Material.STRIPPED_MANGROVE_WOOD, Material.STRIPPED_MANGROVE_WOOD, null,
+    GEARSHIFT("Gearshift", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.STRIPPED_MANGROVE_WOOD, "gearshift",
             "A shaft that reverses rotation while powered by redstone."),
     HAND_CRANK("Hand Crank", Orientation.FACING, Material.WAXED_OXIDIZED_COPPER_CHAIN, Material.LEVER, "hand_crank",
             "Hold right-click to turn the block it is attached to.",
             "Sneak while cranking to turn it the other way."),
-    CREATIVE_MOTOR("Creative Motor", Orientation.FACING, Material.PURPUR_BLOCK, Material.PURPUR_BLOCK, null,
+    CREATIVE_MOTOR("Creative Motor", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.PURPUR_BLOCK, "creative_motor",
             "Endless rotation for testing.",
             "Right-click: faster, sneak + right-click: slower."),
     WATER_WHEEL("Water Wheel", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.OAK_TRAPDOOR, "water_wheel",
@@ -66,17 +66,17 @@ public enum PartType {
             "Connects pumps, tanks, chests and machines.",
             "Carries fluids and items when a pump pushes them."),
     MECHANICAL_PUMP("Mechanical Pump", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.COPPER_BULB, "mechanical_pump",
-            "Moves fluids and items through pipes, from its back to its front.",
-            "Power it from the side. Faster = more per second. Reverse the spin to reverse the flow."),
+            "Moves fluids and items through pipes, the way its arrows point.",
+            "Turn it with a cogwheel next to it or a shaft into its side. Sneak + right-click to turn it around."),
     FLUID_TANK("Fluid Tank", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.GLASS, "fluid_tank", 0, Axis.Y, 0,
-            "Holds 8 buckets. Stack them to make a bigger tank.",
-            "Use buckets on it, or pump fluids in and out."),
+            "Holds 8 buckets. Tanks touching each other join into one big tank.",
+            "Use buckets on it, or pump fluids in and out. It can hold XP too."),
     ITEM_VAULT("Item Vault", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.BARREL, "item_vault", 54, Axis.Y, 0,
             "Holds 54 stacks. Right-click to open.",
-            "Vaults touching each other fill up together."),
+            "Vaults touching each other join up and fill together."),
     STEAM_ENGINE("Steam Engine", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.PISTON, "steam_engine",
-            "Place on the side of a fluid tank full of water with heat under it.",
-            "Power comes out the front. Bigger, hotter boilers give more."),
+            "Place it on the side of a fluid tank with water and heat under it.",
+            "Put a shaft on its front. Bigger, hotter boilers give more."),
     BLAZE_BURNER("Blaze Burner", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.CAMPFIRE, "blaze_burner", 0, Axis.Y, 0,
             "Heats the tank above it. Feed it fuel with right-click, a funnel or a pipe.",
             "Blaze rods and blaze powder make it superheated."),
@@ -94,7 +94,10 @@ public enum PartType {
             "Place it on an electric block, then string wire between connectors.",
             "Use a Wire Spool on two connectors to make a power line."),
     CABLE("Cable", Orientation.AXIS, Material.WAXED_OXIDIZED_COPPER_CHAIN, Material.BLACK_CANDLE, "cable",
-            "Carries energy between blocks it touches.");
+            "Carries energy between blocks it touches."),
+    GENERATOR("Generator", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.BLAST_FURNACE, "generator",
+            "Burns fuel to make energy (FE). No rotation needed.",
+            "Feed it with right-click, a funnel or a pipe. Lava works too.");
 
     public enum Orientation { AXIS, FACING }
 
@@ -143,7 +146,7 @@ public enum PartType {
     }
 
     public boolean electric() {
-        return this == ALTERNATOR || this == ELECTRIC_MOTOR || this == ACCUMULATOR || this == CONNECTOR || this == CABLE;
+        return this == ALTERNATOR || this == ELECTRIC_MOTOR || this == ACCUMULATOR || this == CONNECTOR || this == CABLE || this == GENERATOR;
     }
 
     public boolean hasInvisibleHost() {

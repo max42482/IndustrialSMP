@@ -79,6 +79,44 @@ final class Vaults {
         return list;
     }
 
+    void reshapeAround(org.bukkit.block.Block block) {
+        Set<KineticPart> done = new HashSet<>();
+        List<KineticPart> start = new ArrayList<>();
+        KineticPart self = kinetics.partAt(block);
+        if (self != null && self.type == PartType.ITEM_VAULT) {
+            start.add(self);
+        }
+        for (BlockFace f : Faces.ALL) {
+            KineticPart n = kinetics.partAt(block.getRelative(f));
+            if (n != null && n.type == PartType.ITEM_VAULT) {
+                start.add(n);
+            }
+        }
+        for (KineticPart s : start) {
+            if (done.contains(s)) {
+                continue;
+            }
+            List<KineticPart> g = group(s);
+            Set<KineticPart> members = new HashSet<>(g);
+            done.addAll(g);
+            for (KineticPart v : g) {
+                int mask = 0;
+                for (BlockFace f : Faces.ALL) {
+                    KineticPart n = kinetics.partAt(v.block().getRelative(f));
+                    if (n == null || !members.contains(n)) {
+                        mask |= 1 << f.ordinal();
+                    }
+                }
+                if (mask != v.shape) {
+                    v.shape = mask;
+                    if (v.visual != null) {
+                        v.visual.setModel(0, "vault_" + mask);
+                    }
+                }
+            }
+        }
+    }
+
     ItemStack insert(KineticPart vault, ItemStack stack) {
         ItemStack left = stack.clone();
         for (KineticPart v : group(vault)) {

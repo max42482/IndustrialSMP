@@ -35,6 +35,7 @@ final class KineticsConfig {
     double motorCapacityPerRpm = 16;
     long accumulatorCapacity = 500_000;
     int maxWireLength = 16;
+    double generatorFe = 64;
     final Map<PartType, Double> impact = new EnumMap<>(PartType.class);
 
     void load(ConfigurationSection c) {
@@ -78,6 +79,7 @@ final class KineticsConfig {
         motorCapacityPerRpm = Math.max(0, c.getDouble("energy.motor-capacity-per-rpm", 16));
         accumulatorCapacity = Math.max(1000, c.getLong("energy.accumulator-capacity", 500_000));
         maxWireLength = Math.max(2, c.getInt("energy.max-wire-length", 16));
+        generatorFe = Math.max(0, c.getDouble("energy.generator-fe-per-tick", 64));
         ConfigurationSection s = c.getConfigurationSection("stress-impact");
         if (s != null) {
             for (String key : s.getKeys(false)) {

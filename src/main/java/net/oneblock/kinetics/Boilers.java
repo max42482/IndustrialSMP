@@ -16,12 +16,12 @@ import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.List;
 import java.util.Map;
 
 final class Boilers {
     private static final int INTERVAL = 20;
     private static final int MAX_BURN = 20 * 60 * 20;
+    private static final int MAX_LEVEL = 18;
     private static final Map<Material, Integer> FUEL = Map.ofEntries(
             Map.entry(Material.COAL, 1600), Map.entry(Material.CHARCOAL, 1600), Map.entry(Material.COAL_BLOCK, 16000),
             Map.entry(Material.DRIED_KELP_BLOCK, 4000), Map.entry(Material.BLAZE_ROD, 2400), Map.entry(Material.BLAZE_POWDER, 1200),
@@ -159,24 +159,66 @@ final class Boilers {
             return;
         }
         int level = 0;
+        int engines = 1;
         KineticPart tank = kinetics.partAt(engine.block().getRelative(engine.facing.getOppositeFace()));
         if (tank != null && tank.type == PartType.FLUID_TANK) {
-            List<KineticPart> column = kinetics.tanks.column(tank);
-            int heat = heat(column.getFirst().block().getRelative(BlockFace.DOWN));
-            int wanted = Math.min(heat * 3, column.size());
-            int need = wanted * kinetics.config.boilerWaterPerLevel * INTERVAL;
-            if (wanted > 0 && kinetics.tanks.fluid(column) == Tanks.Fluid.WATER && kinetics.tanks.amount(column) >= need) {
-                kinetics.tanks.drain(column, need);
-                level = wanted;
+            Tanks.Group g = kinetics.tanks.group(tank);
+            if (g.boilerTick != tick) {
+                g.boilerTick = tick;
+                g.boilerLevel = boil(g);
+                g.boilerEngines = engines(g);
             }
+            level = g.boilerLevel;
+            engines = g.boilerEngines;
         }
-        if (level != engine.boilerLevel) {
+        if (level != engine.boilerLevel || engines != engine.boilerEngines) {
             engine.boilerLevel = level;
+            engine.boilerEngines = engines;
             kinetics.markDirty(engine);
         }
         if (level > 0) {
-            engine.world.spawnParticle(Particle.CLOUD, engine.center().add(0, 0.6, 0), 2 + level, 0.15, 0.1, 0.15, 0.02);
+            engine.world.spawnParticle(Particle.CLOUD, engine.center().add(0, 0.6, 0), 1 + level / Math.max(1, engines), 0.15, 0.1, 0.15, 0.02);
+            if (tick % 40 == 0) {
+                engine.world.playSound(engine.center(), Sound.BLOCK_PISTON_EXTEND, 0.15f, 0.6f);
+            }
         }
+    }
+
+    int level(Tanks.Group g) {
+        int heat = 0;
+        int bottom = g.bottom().y;
+        for (KineticPart t : g.parts) {
+            if (t.y == bottom) {
+                heat += heat(t.block().getRelative(BlockFace.DOWN));
+            }
+        }
+        return Math.min(MAX_LEVEL, Math.min(heat * 3, g.parts.size()));
+    }
+
+    private int boil(Tanks.Group g) {
+        int wanted = level(g);
+        if (wanted <= 0 || kinetics.tanks.fluid(g) != Tanks.Fluid.WATER) {
+            return 0;
+        }
+        int perLevel = Math.max(1, kinetics.config.boilerWaterPerLevel * INTERVAL);
+        int level = Math.min(wanted, kinetics.tanks.amount(g) / perLevel);
+        if (level > 0) {
+            kinetics.tanks.drain(g, level * perLevel);
+        }
+        return level;
+    }
+
+    private int engines(Tanks.Group g) {
+        int count = 0;
+        for (KineticPart t : g.parts) {
+            for (BlockFace f : Faces.ALL) {
+                KineticPart e = kinetics.partAt(t.block().getRelative(f));
+                if (e != null && e.type == PartType.STEAM_ENGINE && e.facing == f) {
+                    count++;
+                }
+            }
+        }
+        return Math.max(1, count);
     }
 
     void refresh(KineticPart part) {

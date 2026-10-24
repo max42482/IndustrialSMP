@@ -64,6 +64,7 @@ progression:
     windmill_bearing: 2
     crushing_wheel: 3
     steam_engine: 5
+    generator: 2
   # Cogs to unlock each recipe (0 = free starter recipe).
   unlock-costs:
     andesite_alloy: 0
@@ -99,6 +100,7 @@ progression:
     connector: 2
     cable: 2
     wire_spool: 2
+    generator: 5
 
 # Create-style rotation. Speeds are in RPM, stress in SU (stress units), like Create.
 kinetics:
@@ -155,6 +157,8 @@ kinetics:
     motor-capacity-per-rpm: 16
     accumulator-capacity: 500000
     max-wire-length: 16
+    # Generators burn fuel and make this much FE per tick while something needs power.
+    generator-fe-per-tick: 64
   # Stress a part uses per RPM it turns at. Shafts and gears are free, like in Create.
   # A drill at 8 RPM uses 4 x 8 = 32 SU, so one water wheel runs 8 drills - or fewer, faster ones.
   stress-impact:

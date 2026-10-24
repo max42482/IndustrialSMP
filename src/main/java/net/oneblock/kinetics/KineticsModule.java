@@ -7,24 +7,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.Tag;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.Particle;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Orientable;
 import org.bukkit.block.data.type.Slab;
-import org.bukkit.entity.Entity;
-import org.bukkit.util.Vector;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -32,16 +26,14 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.BoundingBox;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 public final class KineticsModule {
     private static final int GOGGLES_INTERVAL = 4;
@@ -74,6 +66,7 @@ public final class KineticsModule {
     final Vaults vaults = new Vaults(this);
     final Boilers boilers = new Boilers(this);
     final Energy energy = new Energy(this);
+    final Generators generators = new Generators(this);
     private final ResourcePackHost pack;
     private final Set<KineticPart> dirty = new LinkedHashSet<>();
     private final Set<KineticPart> activeCranks = new HashSet<>();
@@ -121,6 +114,7 @@ public final class KineticsModule {
             task.cancel();
         }
         pack.stop();
+        pipes.clear();
         energy.clear();
         processing.unload();
         Set<Chunk> chunks = new HashSet<>();
@@ -143,11 +137,17 @@ public final class KineticsModule {
             case DEPOT -> depots.refresh(p);
             case BELT -> belts.segment(p);
             case WINDMILL_BEARING -> windmills.load(p);
-            case FLUID_TANK -> tanks.refresh(p);
+            case FLUID_TANK -> {
+                tanks.refresh(p);
+                tanks.reshapeAround(p.block());
+            }
+            case ITEM_VAULT -> vaults.reshapeAround(p.block());
             case BLAZE_BURNER -> boilers.refresh(p);
             case FLUID_PIPE -> pipes.refresh(p);
             case CABLE -> refreshCable(p);
             case CONNECTOR -> energy.load(p);
+            case GENERATOR -> generators.refresh(p);
+            case ACCUMULATOR -> energy.showCharge(p);
             default -> {
             }
         }
@@ -158,7 +158,10 @@ public final class KineticsModule {
             case DEPOT -> depots.unload(p);
             case BELT -> belts.unload(p);
             case WINDMILL_BEARING -> windmills.unload(p);
-            case FLUID_TANK -> tanks.unload(p);
+            case FLUID_TANK -> {
+                tanks.unload(p);
+                tanks.invalidate();
+            }
             case ITEM_VAULT -> vaults.unload(p);
             case BLAZE_BURNER -> boilers.unload(p);
             case CONNECTOR -> energy.unload(p);
@@ -189,6 +192,15 @@ public final class KineticsModule {
             p.visual.spawn();
             loadExtras(p);
             dirty.add(p);
+        }
+        for (KineticPart p : registry.inChunk(chunk.getWorld(), chunk.getX(), chunk.getZ())) {
+            pipes.refreshAround(p.block());
+            refreshCablesAround(p.block());
+            if (p.type == PartType.FLUID_PIPE) {
+                pipes.refresh(p);
+            } else if (p.type == PartType.CABLE) {
+                refreshCable(p);
+            }
         }
     }
 
@@ -240,14 +252,32 @@ public final class KineticsModule {
             return false;
         }
         Axis axis = player.isSneaking() ? Faces.axisOf(face) : preferredAxis(type, target, Faces.axisOf(face));
+        if (type == PartType.GEARBOX && !player.isSneaking()) {
+            axis = Faces.axisOf(face) != Axis.Y ? Axis.Y : Faces.axisOf(player.getFacing()) == Axis.X ? Axis.Z : Axis.X;
+        }
         if (axis == Axis.Y && (type == PartType.MECHANICAL_PRESS || type == PartType.CRUSHING_WHEEL)) {
             axis = Faces.axisOf(player.getFacing());
         }
-        BlockFace facing = type == PartType.FUNNEL || type == PartType.CONNECTOR ? face : face.getOppositeFace();
-        if (type == PartType.MECHANICAL_DRILL && !player.isSneaking()) {
+        boolean outward = type == PartType.FUNNEL || type == PartType.CONNECTOR || type == PartType.ENCASED_FAN
+                || type == PartType.WINDMILL_BEARING || type == PartType.STEAM_ENGINE || type == PartType.GENERATOR;
+        BlockFace facing = outward ? face : face.getOppositeFace();
+        if (type == PartType.GENERATOR && Faces.axisOf(face) == Axis.Y) {
+            facing = player.getFacing().getOppositeFace();
+        }
+        if (type == PartType.WINDMILL_BEARING && Tag.WOOL.isTagged(clicked.getType())) {
+            facing = face.getOppositeFace();
+        }
+        boolean backPowered = type == PartType.MECHANICAL_DRILL || type == PartType.ENCASED_FAN || type == PartType.WINDMILL_BEARING;
+        if (backPowered && !player.isSneaking()) {
             BlockFace input = drillInput(target, clicked, face);
             if (input != null) {
                 facing = input.getOppositeFace();
+            }
+        }
+        if (type == PartType.STEAM_ENGINE) {
+            BlockFace tank = tankSide(target, clicked, face);
+            if (tank != null) {
+                facing = tank.getOppositeFace();
             }
         }
         KineticPart part = new KineticPart(target.getWorld(), target.getX(), target.getY(), target.getZ(), type,
@@ -318,6 +348,44 @@ public final class KineticsModule {
             }
         }
         return wanted.size() == 1 ? wanted.iterator().next() : fallback;
+    }
+
+    private BlockFace tankSide(Block target, Block clicked, BlockFace face) {
+        KineticPart c = partAt(clicked);
+        if (c != null && c.type == PartType.FLUID_TANK) {
+            return face.getOppositeFace();
+        }
+        for (BlockFace f : Faces.ALL) {
+            KineticPart n = partAt(target.getRelative(f));
+            if (n != null && n.type == PartType.FLUID_TANK) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    void flip(KineticPart part) {
+        KineticPart flipped = new KineticPart(part.world, part.x, part.y, part.z, part.type, part.axis, part.facing.getOppositeFace(),
+                part.motorSpeed);
+        flipped.slots = part.slots;
+        flipped.extra = part.extra;
+        flipped.powered = part.powered;
+        List<KineticPart> neighbors = new ArrayList<>();
+        for (NetworkSolver.Edge e : solver.edges(part)) {
+            neighbors.add(e.other());
+        }
+        if (part.visual != null) {
+            part.visual.remove();
+        }
+        registry.remove(part);
+        dirty.remove(part);
+        registry.add(flipped);
+        flipped.visual = new PartVisual(flipped);
+        flipped.visual.spawn();
+        dirty.add(flipped);
+        dirty.addAll(neighbors);
+        registry.save(flipped);
+        pipes.refreshAround(flipped.block());
     }
 
     private BlockFace drillInput(Block target, Block clicked, BlockFace face) {
@@ -409,25 +477,35 @@ public final class KineticsModule {
         dirty.addAll(neighbors);
         pipes.refreshAround(part.block());
         refreshCablesAround(part.block());
+        if (part.type == PartType.FLUID_TANK) {
+            Tanks.Contents kept = tanks.contents(part);
+            tanks.reshapeAround(part.block());
+            for (BlockFace f : Faces.ALL) {
+                KineticPart n = partAt(part.block().getRelative(f));
+                if (n != null && n.type == PartType.FLUID_TANK && kept.fluid != null && kept.amount > 0) {
+                    kept.amount -= tanks.fill(tanks.group(n), kept.fluid, kept.amount);
+                }
+            }
+        } else if (part.type == PartType.ITEM_VAULT) {
+            vaults.reshapeAround(part.block());
+        }
         energy.markDirty();
     }
 
     void refreshCable(KineticPart cable) {
-        java.util.Set<BlockFace> now = java.util.EnumSet.noneOf(BlockFace.class);
+        int now = 0;
         for (BlockFace f : Faces.ALL) {
             KineticPart n = partAt(cable.block().getRelative(f));
             if (n != null && n.type.electric()) {
-                now.add(f);
+                now |= 1 << f.ordinal();
             }
         }
-        if (now.equals(cable.state) || cable.visual == null) {
-            cable.state = now;
-            return;
+        if (now != cable.shape) {
+            cable.shape = now;
+            if (cable.visual != null) {
+                cable.visual.setModel(0, "cable_" + PartVisual.shape(cable));
+            }
         }
-        cable.state = now;
-        cable.visual.remove();
-        cable.visual = new PartVisual(cable);
-        cable.visual.spawn();
     }
 
     void refreshCablesAround(Block block) {
@@ -479,6 +557,17 @@ public final class KineticsModule {
             }
             case BLAZE_BURNER -> {
                 return boilers.interact(player, part, item);
+            }
+            case GENERATOR -> {
+                return generators.interact(player, part, item);
+            }
+            case MECHANICAL_PUMP -> {
+                if (!emptyHand || !player.isSneaking()) {
+                    return false;
+                }
+                flip(part);
+                player.playSound(part.center(), Sound.BLOCK_COPPER_PLACE, 0.8f, 1.2f);
+                player.sendActionBar(Text.mm("<gray>Pump turned around."));
             }
             case ELECTRIC_MOTOR -> {
                 if (!emptyHand) {
@@ -611,10 +700,14 @@ public final class KineticsModule {
                 case MECHANICAL_PUMP -> pipes.tickPump(p, tick);
                 case BLAZE_BURNER -> boilers.tickBurner(p, tick);
                 case STEAM_ENGINE -> boilers.tickEngine(p, tick);
+                case FLUID_PIPE -> pipes.tickPipe(p, tick);
+                case FLUID_TANK -> tanks.tick(p, tick);
+                case GENERATOR -> generators.tick(p, tick);
                 default -> {
                 }
             }
         }
+        pipes.tickTravelers(tick);
         render(all);
         if (tick % GOGGLES_INTERVAL == 0) {
             goggles.update();
@@ -662,10 +755,14 @@ public final class KineticsModule {
             float degreesPerTick = (float) (p.speed * 360 / 60 / 20);
             float abs = Math.abs(degreesPerTick);
             int ticks = abs <= 24 ? 5 : abs <= 60 ? 2 : 1;
-            p.angle = (p.angle + degreesPerTick * ticks) % 360;
+            p.angle = p.network == null ? (p.angle + degreesPerTick * ticks) % 360
+                    : (float) (p.network.angle(p.ratio, tick + ticks) % 360);
             p.visual.apply(p.angle, ticks + 1);
             if (p.type == PartType.WINDMILL_BEARING) {
                 windmills.render(p, p.angle, ticks + 1);
+            } else if (p.type == PartType.STEAM_ENGINE) {
+                float push = (float) Math.sin(Math.toRadians(p.angle)) * 1.5f / 16;
+                p.visual.custom(1, 0, new Vector3f(p.facing.getModX() * push, p.facing.getModY() * push, p.facing.getModZ() * push), ticks + 1);
             }
             p.nextRender = tick + ticks;
         }

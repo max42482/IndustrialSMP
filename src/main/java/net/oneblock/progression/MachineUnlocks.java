@@ -180,6 +180,10 @@ public final class MachineUnlocks implements Listener {
                 shapeless(key, items.part(PartType.CABLE, 4), List.of(copperIngot, kelp, kelp)));
         register(costs, "wire_spool", "Wire Spool x2", () -> items.wireSpool(1), "3 copper ingots + stick", key ->
                 shapeless(key, items.wireSpool(2), List.of(copperIngot, copperIngot, copperIngot, new RecipeChoice.MaterialChoice(Material.STICK))));
+        register(costs, "generator", "Generator", () -> items.part(PartType.GENERATOR, 1),
+                "blast furnace, 2 copper sheets, redstone block + andesite alloy", key ->
+                shapeless(key, items.part(PartType.GENERATOR, 1), List.of(new RecipeChoice.MaterialChoice(Material.BLAST_FURNACE),
+                        copperSheet, copperSheet, redstoneBlock, alloy)));
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             syncRecipeBook(p);
