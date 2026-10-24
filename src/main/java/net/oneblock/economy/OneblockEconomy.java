@@ -13,6 +13,7 @@ import net.oneblock.economy.command.OrdersCommand;
 import net.oneblock.economy.db.Database;
 import net.oneblock.economy.gui.Menu;
 import net.oneblock.economy.gui.MenuListener;
+import net.oneblock.economy.market.MarketBoard;
 import net.oneblock.economy.market.MarketManager;
 import net.oneblock.economy.market.SellService;
 import net.oneblock.economy.orders.OrderManager;
@@ -47,6 +48,7 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
     private AccountManager accounts;
     private CollectionManager collection;
     private MarketManager market;
+    private MarketBoard marketBoard;
     private SellService sell;
     private OrderManager orders;
     private AuctionManager auctions;
@@ -111,6 +113,8 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(unlocks, this);
         getServer().getPluginManager().registerEvents(milestones, this);
         islands.enable();
+        marketBoard = new MarketBoard(market, () -> islands.spawnLocation().add(-6, 0.2, 0));
+        marketBoard.start(this);
         IslandCommand islandCommand = islands.command();
         register("is", islandCommand);
         register("unlocks", islandCommand);
@@ -137,6 +141,9 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
             if (p.getOpenInventory().getTopInventory().getHolder(false) instanceof Menu) {
                 p.closeInventory();
             }
+        }
+        if (marketBoard != null) {
+            marketBoard.stop();
         }
         if (kinetics != null) {
             kinetics.disable();

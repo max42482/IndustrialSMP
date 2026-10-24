@@ -205,11 +205,14 @@ resource-pack:
   required: false
 
 market:
-  # Price = base * 1 / (1 + recent_sales / elasticity), never below base * min-factor.
-  # With elasticity 2000, selling 2000 units of an item halves its price.
-  elasticity: 2000
+  # Prices move both ways. Each item has a normal amount that gets sold over time, worth normal-value coins
+  # (cheap items need more units, expensive ones fewer). Selling more than that pushes the price down
+  # (double the normal amount = half price, never below base * min-factor). Selling less lets it climb
+  # above the base price, up to base * max-factor when nobody sells it for a few hours.
+  normal-value: 2000
+  max-factor: 1.6
   min-factor: 0.2
-  # How fast prices recover: recent sales halve every N minutes.
+  # How fast the market forgets sales: recent sales halve every N minutes.
   recovery-half-life-minutes: 90
   # A price snapshot is stored every N minutes (24 snapshots are kept for the /worth graph).
   history-sample-minutes: 60

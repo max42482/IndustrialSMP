@@ -102,6 +102,7 @@ public final class MarketCommands implements TabExecutor {
             sender.sendMessage(Text.mm(" <gray>Your " + amount + ": " + Currency.COINS.format(market.quote(material, amount))));
         }
         sender.sendMessage(Text.mm(" <gray>Stack of 64: " + Currency.COINS.format(market.quote(material, 64))));
+        sender.sendMessage(Text.mm(" <gray>Market: " + market.demandTag(material) + " <dark_gray>(normal " + Currency.COINS.format(market.basePrice(material)) + ")"));
         sender.sendMessage(Text.mm(" <gray>Last 24h: <aqua>" + market.sparkline(material)));
         if (material == market.eventItem()) {
             sender.sendMessage(Text.mm(" <gold><bold>RUSH</bold> <gray>- sells for " + market.formatMultiplier() + " for another "

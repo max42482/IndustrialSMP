@@ -68,6 +68,10 @@ public final class IslandModule {
         spawn.configure(c);
     }
 
+    public Location spawnLocation() {
+        return spawn.location();
+    }
+
     public SpawnCommand spawnCommand() {
         return new SpawnCommand(this);
     }

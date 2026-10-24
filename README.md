@@ -16,7 +16,7 @@ Jar ends up in `build/libs/`. Vault is optional.
 
 The first chest on a new island is a starter kit with water, lava, seeds, sugar cane, cactus, saplings and food. Chests in each phase can also hold extras that fit it (water in Ocean, lava and nether wart in Nether, cocoa in Jungle and so on), and some OneBlock blocks drop bonus items, like seeds from grass. It's all in `phases.yml`.
 
-**Economy.** Coins and cogs, `/pay`, `/baltop`, `/sell`, `/worth` with prices that drop when people sell a lot, buy orders (`/orders`) and an auction house (`/ah`) with normal, falling price and supply contract listings. Anything you're owed goes to `/collect`.
+**Economy.** Coins and cogs, `/pay`, `/baltop`, `/sell`, `/worth` and a moving market: selling a lot of something drops its price hard, and things nobody sells slowly climb above their normal price. `/market` shows what's selling high right now and there's a live market board at spawn. Also buy orders (`/orders`) and an auction house (`/ah`) with normal, falling price and supply contract listings. Anything you're owed goes to `/collect`.
 
 **Machines.** Rotation works like Create: RPM and stress (SU).
 - Power: hand crank, water wheel, windmill (wool sails), creative motor

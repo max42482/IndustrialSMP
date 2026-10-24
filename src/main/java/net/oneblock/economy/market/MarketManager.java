@@ -25,7 +25,8 @@ public final class MarketManager {
     private final Logger logger;
     private final Map<Material, ItemMarket> items = new LinkedHashMap<>();
 
-    private double elasticity;
+    private long normalCents;
+    private double maxFactor;
     private double minFactor;
     private double decayPerMinute;
     private int sampleMinutes;
@@ -67,7 +68,8 @@ public final class MarketManager {
     }
 
     public void load(ConfigurationSection config, YamlConfiguration prices) throws SQLException {
-        elasticity = Math.max(1, config.getDouble("elasticity", 2000));
+        normalCents = Math.max(1, Money.fromCoins(config.getDouble("normal-value", 2000)));
+        maxFactor = Math.max(1.0, config.getDouble("max-factor", 1.6));
         minFactor = Math.clamp(config.getDouble("min-factor", 0.2), 0.01, 1.0);
         double halfLife = Math.max(1, config.getDouble("recovery-half-life-minutes", 90));
         decayPerMinute = Math.pow(0.5, 1.0 / halfLife);
@@ -91,12 +93,19 @@ public final class MarketManager {
             if (base <= 0) {
                 continue;
             }
-            ItemMarket market = previous.getOrDefault(material, new ItemMarket(material, base));
+            ItemMarket market = previous.get(material);
+            if (market == null) {
+                market = new ItemMarket(material, base);
+                market.saturation = normal(market);
+                market.dirty = true;
+            }
             market.baseCents = base;
             items.put(material, market);
         }
 
         if (previous.isEmpty()) {
+            db.executeNow("CREATE TABLE IF NOT EXISTS market_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+            boolean twoWay = !db.queryNow("SELECT value FROM market_meta WHERE key = 'model'", rs -> rs.getString(1)).isEmpty();
             for (Object[] row : db.queryNow("SELECT material, saturation, history FROM market_items",
                     rs -> new Object[]{rs.getString(1), rs.getDouble(2), rs.getString(3)})) {
                 Material material = Material.matchMaterial((String) row[0]);
@@ -104,13 +113,17 @@ public final class MarketManager {
                 if (market == null) {
                     continue;
                 }
-                market.saturation = (double) row[1];
+                market.saturation = twoWay ? (double) row[1] : normal(market);
+                market.dirty = !twoWay;
                 String history = (String) row[2];
                 if (!history.isEmpty()) {
                     for (String part : history.split(",")) {
                         market.history.add(Long.parseLong(part));
                     }
                 }
+            }
+            if (!twoWay) {
+                db.execute("INSERT OR REPLACE INTO market_meta (key, value) VALUES ('model', 'two-way')");
             }
         }
     }
@@ -123,8 +136,49 @@ public final class MarketManager {
         return items.values();
     }
 
-    private double factor(double saturation) {
-        return Math.max(minFactor, 1.0 / (1.0 + saturation / elasticity));
+    private double normal(ItemMarket m) {
+        return (double) normalCents / Math.max(1, m.baseCents);
+    }
+
+    private double factor(ItemMarket m, double supply) {
+        double pressure = supply / normal(m);
+        if (pressure <= 1) {
+            return maxFactor - (maxFactor - 1) * pressure;
+        }
+        return Math.max(minFactor, 1.0 / pressure);
+    }
+
+    public double factor(Material material) {
+        ItemMarket m = items.get(material);
+        return m == null ? 1 : factor(m, m.saturation);
+    }
+
+    public long basePrice(Material material) {
+        ItemMarket m = items.get(material);
+        return m == null ? 0 : m.baseCents;
+    }
+
+    public double maxFactor() {
+        return maxFactor;
+    }
+
+    public double minFactor() {
+        return minFactor;
+    }
+
+    public List<ItemMarket> ranked() {
+        List<ItemMarket> list = new ArrayList<>(items.values());
+        list.sort(java.util.Comparator.comparingDouble((ItemMarket m) -> factor(m, m.saturation)).reversed());
+        return list;
+    }
+
+    public String demandTag(Material material) {
+        double f = factor(material);
+        int percent = (int) Math.round((f - 1) * 100);
+        if (Math.abs(percent) < 3) {
+            return "<gray>around normal";
+        }
+        return percent > 0 ? "<green>▲ " + percent + "% above normal" : "<red>▼ " + -percent + "% below normal";
     }
 
     private double eventFactor(Material material) {
@@ -136,7 +190,7 @@ public final class MarketManager {
         if (m == null) {
             return 0;
         }
-        return Math.round(m.baseCents * factor(m.saturation) * eventFactor(material));
+        return Math.round(m.baseCents * factor(m, m.saturation) * eventFactor(material));
     }
 
     public long quote(Material material, int amount) {
@@ -147,7 +201,7 @@ public final class MarketManager {
         double event = eventFactor(material);
         double total = 0;
         for (int i = 0; i < amount; i++) {
-            total += m.baseCents * factor(m.saturation + i) * event;
+            total += m.baseCents * factor(m, m.saturation + i) * event;
         }
         return Math.round(total);
     }
