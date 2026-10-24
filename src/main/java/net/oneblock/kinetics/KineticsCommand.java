@@ -208,6 +208,9 @@ public final class KineticsCommand implements TabExecutor {
                     + "</white> SU, stress <white>" + Goggles.su(n.stress) + "</white> SU"
                     + (n.problem != Network.Problem.NONE ? ", <red>" + n.problem.message : "")));
         }
+        if (part.type == PartType.ITEM_VAULT) {
+            kinetics.vaults.sync(part);
+        }
         List<String> held = new ArrayList<>();
         for (org.bukkit.inventory.ItemStack s : part.slots) {
             if (s != null) {
@@ -221,6 +224,16 @@ public final class KineticsCommand implements TabExecutor {
         }
         if (!held.isEmpty()) {
             to.sendMessage(Text.mm(" <gray>Holding: <white>" + Text.escape(String.join(", ", held))));
+        }
+        if (part.type == PartType.FLUID_TANK) {
+            to.sendMessage(Text.mm(" <gray>Tank: " + kinetics.tanks.describe(kinetics.tanks.column(part))));
+        }
+        if (part.type == PartType.STEAM_ENGINE) {
+            to.sendMessage(Text.mm(" <gray>Boiler level: <white>" + part.boilerLevel));
+        }
+        if (part.type == PartType.BLAZE_BURNER) {
+            Boilers.Burner b = kinetics.boilers.burner(part);
+            to.sendMessage(Text.mm(" <gray>Fuel: <white>" + b.burn + "</white> ticks" + (b.superheated ? ", superheated" : "")));
         }
         if (part.type == PartType.WINDMILL_BEARING && part.state instanceof Windmills.Sails s) {
             to.sendMessage(Text.mm(" <gray>Sails: <white>" + s.blocks.size()));

@@ -140,6 +140,30 @@ public final class MachineUnlocks implements Listener {
                 shaped(key, items.part(PartType.WINDMILL_BEARING, 1), new String[]{"P", "W", "S"},
                         Map.of('P', new RecipeChoice.MaterialChoice(Tag.WOODEN_SLABS), 'W', casingWood, 'S', shaft)));
 
+        RecipeChoice copperSheet = RecipeChoice.predicateChoice(i -> items.materialOf(i) == MaterialItem.COPPER_SHEET,
+                items.material(MaterialItem.COPPER_SHEET, 1));
+        RecipeChoice goldenSheet = RecipeChoice.predicateChoice(i -> items.materialOf(i) == MaterialItem.GOLDEN_SHEET,
+                items.material(MaterialItem.GOLDEN_SHEET, 1));
+        RecipeChoice pipe = RecipeChoice.predicateChoice(i -> items.partOf(i) == PartType.FLUID_PIPE, items.part(PartType.FLUID_PIPE, 1));
+        RecipeChoice barrel = new RecipeChoice.MaterialChoice(Material.BARREL);
+        register(costs, "fluid_pipe", "Pipe x4", () -> items.part(PartType.FLUID_PIPE, 1), "copper ingot, copper sheet, copper ingot (stacked)", key ->
+                shaped(key, items.part(PartType.FLUID_PIPE, 4), new String[]{"C", "S", "C"},
+                        Map.of('C', new RecipeChoice.MaterialChoice(Material.COPPER_INGOT), 'S', copperSheet)));
+        register(costs, "mechanical_pump", "Mechanical Pump", () -> items.part(PartType.MECHANICAL_PUMP, 1), "cogwheel + pipe", key ->
+                shapeless(key, items.part(PartType.MECHANICAL_PUMP, 1), List.of(cog, pipe)));
+        register(costs, "fluid_tank", "Fluid Tank", () -> items.part(PartType.FLUID_TANK, 1), "barrel between two copper sheets", key ->
+                shaped(key, items.part(PartType.FLUID_TANK, 1), new String[]{"S", "B", "S"}, Map.of('S', copperSheet, 'B', barrel)));
+        register(costs, "item_vault", "Item Vault", () -> items.part(PartType.ITEM_VAULT, 1), "barrel between two iron sheets", key ->
+                shaped(key, items.part(PartType.ITEM_VAULT, 1), new String[]{"S", "B", "S"}, Map.of('S', ironSheet, 'B', barrel)));
+        register(costs, "steam_engine", "Steam Engine", () -> items.part(PartType.STEAM_ENGINE, 1),
+                "golden sheet, andesite alloy, copper block (stacked)", key ->
+                shaped(key, items.part(PartType.STEAM_ENGINE, 1), new String[]{"G", "A", "C"},
+                        Map.of('G', goldenSheet, 'A', alloy, 'C', new RecipeChoice.MaterialChoice(Material.COPPER_BLOCK))));
+        register(costs, "blaze_burner", "Blaze Burner", () -> items.part(PartType.BLAZE_BURNER, 1),
+                "2 iron sheets, netherrack + blaze rod", key ->
+                shapeless(key, items.part(PartType.BLAZE_BURNER, 1), List.of(ironSheet, ironSheet,
+                        new RecipeChoice.MaterialChoice(Material.NETHERRACK), new RecipeChoice.MaterialChoice(Material.BLAZE_ROD))));
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             syncRecipeBook(p);
         }

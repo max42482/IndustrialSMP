@@ -69,6 +69,10 @@ public final class KineticsModule {
     final Funnels funnels = new Funnels(this);
     final Gauges gauges = new Gauges(this);
     final Windmills windmills = new Windmills(this);
+    final Tanks tanks = new Tanks(this);
+    final Pipes pipes = new Pipes(this);
+    final Vaults vaults = new Vaults(this);
+    final Boilers boilers = new Boilers(this);
     private final ResourcePackHost pack;
     private final Set<KineticPart> dirty = new LinkedHashSet<>();
     private final Set<KineticPart> activeCranks = new HashSet<>();
@@ -137,6 +141,9 @@ public final class KineticsModule {
             case DEPOT -> depots.refresh(p);
             case BELT -> belts.segment(p);
             case WINDMILL_BEARING -> windmills.load(p);
+            case FLUID_TANK -> tanks.refresh(p);
+            case BLAZE_BURNER -> boilers.refresh(p);
+            case FLUID_PIPE -> pipes.refresh(p);
             default -> {
             }
         }
@@ -147,6 +154,9 @@ public final class KineticsModule {
             case DEPOT -> depots.unload(p);
             case BELT -> belts.unload(p);
             case WINDMILL_BEARING -> windmills.unload(p);
+            case FLUID_TANK -> tanks.unload(p);
+            case ITEM_VAULT -> vaults.unload(p);
+            case BLAZE_BURNER -> boilers.unload(p);
             default -> {
             }
         }
@@ -275,6 +285,8 @@ public final class KineticsModule {
         }
         part.visual = new PartVisual(part);
         part.visual.spawn();
+        loadExtras(part);
+        pipes.refreshAround(target);
         registry.save(part);
         target.getWorld().playSound(target.getLocation(), Sound.BLOCK_WOOD_PLACE, 1f, 1f);
         return true;
@@ -340,6 +352,7 @@ public final class KineticsModule {
         part.visual.spawn();
         loadExtras(part);
         registry.save(part);
+        pipes.refreshAround(target);
         dirty.add(part);
         return part;
     }
@@ -353,6 +366,7 @@ public final class KineticsModule {
             case DEPOT -> depots.dropContents(part);
             case MILLSTONE -> millstones.dropContents(part);
             case CRUSHING_WHEEL -> crushers.dropContents(part);
+            case ITEM_VAULT -> vaults.dropContents(part);
             case WINDMILL_BEARING -> {
                 if (part.state instanceof Windmills.Sails s && !s.blocks.isEmpty()) {
                     windmills.disassemble(part, s);
@@ -381,6 +395,7 @@ public final class KineticsModule {
         activeCranks.remove(part);
         registry.save(part);
         dirty.addAll(neighbors);
+        pipes.refreshAround(part.block());
     }
 
     boolean use(Player player, KineticPart part, BlockFace face, EquipmentSlot hand, ItemStack item) {
@@ -414,6 +429,18 @@ public final class KineticsModule {
                     return false;
                 }
                 windmills.interact(player, part);
+            }
+            case FLUID_TANK -> {
+                return tanks.interact(player, part, item);
+            }
+            case BLAZE_BURNER -> {
+                return boilers.interact(player, part, item);
+            }
+            case ITEM_VAULT -> {
+                if (player.isSneaking() && !emptyHand) {
+                    return false;
+                }
+                vaults.open(player, part);
             }
             default -> {
                 return false;
@@ -530,6 +557,9 @@ public final class KineticsModule {
                 case BELT -> belts.tick(p, tick);
                 case FUNNEL -> funnels.tick(p, tick);
                 case SPEEDOMETER, STRESSOMETER -> gauges.tick(p, tick);
+                case MECHANICAL_PUMP -> pipes.tickPump(p, tick);
+                case BLAZE_BURNER -> boilers.tickBurner(p, tick);
+                case STEAM_ENGINE -> boilers.tickEngine(p, tick);
                 default -> {
                 }
             }
@@ -547,6 +577,9 @@ public final class KineticsModule {
     private void saveDirty(List<KineticPart> all) {
         Set<Long> chunks = new HashSet<>();
         for (KineticPart p : all) {
+            if (p.type == PartType.ITEM_VAULT) {
+                vaults.sync(p);
+            }
             if (!p.dirty) {
                 continue;
             }

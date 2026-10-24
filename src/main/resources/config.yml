@@ -63,6 +63,7 @@ progression:
     mechanical_press: 2
     windmill_bearing: 2
     crushing_wheel: 3
+    steam_engine: 5
   # Cogs to unlock each recipe (0 = free starter recipe).
   unlock-costs:
     andesite_alloy: 0
@@ -86,6 +87,12 @@ progression:
     speedometer: 1
     stressometer: 2
     windmill_bearing: 3
+    fluid_pipe: 2
+    mechanical_pump: 3
+    fluid_tank: 3
+    item_vault: 3
+    steam_engine: 8
+    blaze_burner: 5
 
 # Create-style rotation. Speeds are in RPM, stress in SU (stress units), like Create.
 kinetics:
@@ -120,9 +127,20 @@ kinetics:
     # Fans don't speed up - their range grows with speed instead (RPM / 8 blocks).
     fan-ticks: 100
     fan-max-range: 16
-  # Hits needed to break a thin part (shaft, cog...) in survival; fewer with an axe or pickaxe.
-  break-hits: 3
-  break-hits-with-tool: 2
+  fluids:
+    # mB per tank block (1000 mB = 1 bucket).
+    tank-capacity: 8000
+    tank-max-height: 16
+    # Pumps move RPM x this many mB per tick, and RPM x this many items per second.
+    pump-mb-per-rpm: 2
+    pump-items-per-rpm: 0.25
+  steam:
+    engine-speed: 16
+    # Boiler level = heat x 3, capped by tank height. Heat: fire/lava/campfire 1, blaze burner 2, superheated 3.
+    # Engine capacity = this x level x 16 RPM, so a level 9 boiler gives 9216 SU per engine.
+    capacity-per-rpm-per-level: 64
+    # Water used per tick per level, per engine.
+    water-per-level: 2
   # Stress a part uses per RPM it turns at. Shafts and gears are free, like in Create.
   # A drill at 8 RPM uses 4 x 8 = 32 SU, so one water wheel runs 8 drills - or fewer, faster ones.
   stress-impact:
@@ -137,6 +155,7 @@ kinetics:
     mechanical_press: 8
     encased_fan: 2
     crushing_wheel: 8
+    mechanical_pump: 4
 
 # The machines' 3D models. The plugin builds the pack and can serve it itself.
 resource-pack:

@@ -4,7 +4,6 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Container;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -102,7 +101,8 @@ final class Millstones {
 
     private void pull(KineticPart mill) {
         Block above = mill.block().getRelative(BlockFace.UP);
-        if (above.getState() instanceof Container c) {
+        org.bukkit.inventory.Inventory c = kinetics.ports.inventoryAt(above);
+        if (c != null) {
             ItemStack in = mill.slot(0);
             int room = in == null ? 64 : in.getMaxStackSize() - in.getAmount();
             if (room > 0) {

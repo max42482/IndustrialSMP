@@ -195,6 +195,28 @@ final class PartVisual {
                 list.add(Piece.custom("gauge_needle", dial));
                 list.add(Piece.custom("gauge_needle", dial.getOppositeFace()));
             }
+            case FLUID_PIPE -> {
+                list.add(new Piece("pipe_core", BlockFace.SOUTH, null));
+                java.util.Set<BlockFace> arms = p.state instanceof java.util.Set<?> s && !s.isEmpty()
+                        ? s.stream().map(BlockFace.class::cast).collect(java.util.stream.Collectors.toSet())
+                        : new java.util.HashSet<>(Faces.alongAxis(p.axis));
+                for (BlockFace f : Faces.ALL) {
+                    if (arms.contains(f)) {
+                        list.add(new Piece("pipe_arm", f, null));
+                    }
+                }
+            }
+            case MECHANICAL_PUMP -> {
+                list.add(new Piece("pump_body", p.facing, null));
+                list.add(new Piece("pump_cog", p.facing, p.facing));
+            }
+            case FLUID_TANK -> list.add(new Piece("fluid_tank", BlockFace.SOUTH, null));
+            case ITEM_VAULT -> list.add(new Piece("item_vault", BlockFace.SOUTH, null));
+            case BLAZE_BURNER -> list.add(new Piece("blaze_burner", BlockFace.SOUTH, null));
+            case STEAM_ENGINE -> {
+                list.add(new Piece("engine_body", p.facing, null));
+                list.add(new Piece("engine_wheel", p.facing, p.facing));
+            }
             case WINDMILL_BEARING -> {
                 BlockFace back = p.facing.getOppositeFace();
                 list.add(new Piece("bearing_base", p.facing, null));

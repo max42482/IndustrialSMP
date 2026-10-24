@@ -161,6 +161,67 @@ public final class Models {
             m.put(c[0], new Model(List.of(box(3, 0, 3, 9, 5, 9, c[1]), box(8, 0, 6, 13, 4, 12, c[1]),
                     box(4, 0, 9, 8, 3, 13, c[1])), 11));
         }
+        phase5(m);
+    }
+
+    static final String COPPER = "minecraft:block/copper_block";
+    static final String GLASS = "minecraft:block/glass";
+    static final String WATER = "minecraft:block/water_still";
+    static final String LAVA = "minecraft:block/lava_still";
+
+    private static List<Box> frame(String panel) {
+        List<Box> list = new ArrayList<>();
+        list.add(box(0, 0, 0, 16, 1, 16, COPPER));
+        list.add(box(0, 15, 0, 16, 16, 16, COPPER));
+        for (float[] c : new float[][]{{0, 0}, {14, 0}, {0, 14}, {14, 14}}) {
+            list.add(box(c[0], 1, c[1], c[0] + 2, 15, c[1] + 2, COPPER));
+        }
+        list.add(box(1, 1, 1, 15, 15, 15, panel));
+        return list;
+    }
+
+    private static void phase5(Map<String, Model> m) {
+        List<Box> core = List.of(box(5, 5, 5, 11, 11, 11, COPPER));
+        List<Box> arm = List.of(box(6, 6, 11, 10, 10, 16, COPPER));
+        m.put("pipe_core", new Model(core, 16));
+        m.put("pipe_arm", new Model(arm, 16));
+        m.put("fluid_pipe", new Model(join(core, List.of(box(6, 6, 0, 10, 10, 5, COPPER), box(6, 6, 11, 10, 10, 16, COPPER))), 16));
+
+        List<Box> pumpBody = List.of(
+                box(4, 4, 1, 12, 12, 15, COPPER),
+                box(3, 3, 0, 13, 13, 1, METAL),
+                box(3, 3, 15, 13, 13, 16, METAL));
+        List<Box> pumpCog = new ArrayList<>(disc(14, 7, 9, PLANKS, EIGHT));
+        m.put("pump_body", new Model(pumpBody, 16));
+        m.put("pump_cog", new Model(pumpCog, 16));
+        m.put("mechanical_pump", new Model(join(pumpBody, pumpCog), 16));
+
+        m.put("fluid_tank", new Model(frame(GLASS), 16));
+        m.put("item_vault", new Model(frame(IRON), 16));
+
+        List<Box> engineBody = List.of(
+                box(1, 1, 0, 15, 15, 3, METAL),
+                box(4, 3, 3, 12, 11, 11, COPPER),
+                box(7, 7, 11, 9, 9, 13, IRON));
+        List<Box> engineWheel = new ArrayList<>(disc(11, 13, 15, IRON, SIXTEEN));
+        engineWheel.add(box(6, 6, 15, 10, 10, 16, METAL));
+        m.put("engine_body", new Model(engineBody, 16));
+        m.put("engine_wheel", new Model(engineWheel, 16));
+        m.put("steam_engine", new Model(join(engineBody, engineWheel), 16));
+
+        List<Box> burner = new ArrayList<>();
+        burner.add(box(1, 0, 1, 15, 2, 15, METAL));
+        for (float[] c : new float[][]{{1, 1}, {13, 1}, {1, 13}, {13, 13}}) {
+            burner.add(box(c[0], 2, c[1], c[0] + 2, 13, c[1] + 2, METAL));
+        }
+        burner.add(box(1, 13, 1, 15, 14, 3, METAL));
+        burner.add(box(1, 13, 13, 15, 14, 15, METAL));
+        burner.add(box(1, 13, 3, 3, 14, 13, METAL));
+        burner.add(box(13, 13, 3, 15, 14, 13, METAL));
+        m.put("blaze_burner", new Model(burner, 16));
+
+        m.put("fluid_water", new Model(List.of(box(0, 0, 0, 16, 16, 16, WATER)), 16));
+        m.put("fluid_lava", new Model(List.of(box(0, 0, 0, 16, 16, 16, LAVA)), 16));
     }
 
     private static final float INSET = 0.04f;
@@ -289,7 +350,8 @@ public final class Models {
     }
 
     static String itemJson(String name) {
-        return "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"oneblock:item/" + name + "\"}}";
+        String tints = name.equals("fluid_water") ? ",\"tints\":[{\"type\":\"minecraft:constant\",\"value\":[0.25,0.46,0.89]}]" : "";
+        return "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"oneblock:item/" + name + "\"" + tints + "}}";
     }
 
     private static String textureKey(String texture) {
@@ -320,7 +382,11 @@ public final class Models {
             sb.append(',');
         }
         sb.append('"').append(name).append("\":{\"uv\":[0,0,").append(num(Math.min(16, width))).append(',')
-                .append(num(Math.min(16, height))).append("],\"texture\":\"").append(tex).append("\"}");
+                .append(num(Math.min(16, height))).append("],\"texture\":\"").append(tex).append('"');
+        if (tex.equals("#water_still")) {
+            sb.append(",\"tintindex\":0");
+        }
+        sb.append('}');
     }
 
     private static String display(float shrink) {

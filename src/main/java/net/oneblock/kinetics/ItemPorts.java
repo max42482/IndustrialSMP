@@ -5,6 +5,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Item;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
@@ -21,7 +22,7 @@ final class ItemPorts {
         KineticPart part = kinetics.partAt(target);
         if (part != null) {
             return switch (part.type) {
-                case BELT, DEPOT, MILLSTONE, FUNNEL -> true;
+                case BELT, DEPOT, MILLSTONE, FUNNEL, ITEM_VAULT, BLAZE_BURNER -> true;
                 default -> false;
             };
         }
@@ -38,7 +39,9 @@ final class ItemPorts {
                 case BELT -> kinetics.belts.accept(part, stack, travel);
                 case DEPOT -> kinetics.depots.accept(part, stack);
                 case MILLSTONE -> kinetics.millstones.accept(part, stack);
-                case FUNNEL -> toContainer(target.getRelative(part.facing.getOppositeFace()), stack);
+                case FUNNEL -> insert(target.getRelative(part.facing.getOppositeFace()), stack, travel);
+                case ITEM_VAULT -> kinetics.vaults.insert(part, stack);
+                case BLAZE_BURNER -> kinetics.boilers.acceptFuel(part, stack);
                 default -> stack;
             };
         }
@@ -62,8 +65,16 @@ final class ItemPorts {
         item.setVelocity(new Vector(direction.getModX(), direction.getModY(), direction.getModZ()).multiply(0.1));
     }
 
-    static ItemStack take(Container container, int max, java.util.function.Predicate<ItemStack> accepts) {
-        ItemStack[] contents = container.getInventory().getContents();
+    Inventory inventoryAt(Block block) {
+        KineticPart part = kinetics.partAt(block);
+        if (part != null) {
+            return part.type == PartType.ITEM_VAULT ? kinetics.vaults.inventory(part) : null;
+        }
+        return block.getState() instanceof Container c ? c.getInventory() : null;
+    }
+
+    static ItemStack take(Inventory inventory, int max, java.util.function.Predicate<ItemStack> accepts) {
+        ItemStack[] contents = inventory.getContents();
         for (int i = 0; i < contents.length; i++) {
             ItemStack s = contents[i];
             if (s == null || s.getType().isAir() || !accepts.test(s)) {
@@ -73,15 +84,15 @@ final class ItemPorts {
             ItemStack taken = s.clone();
             taken.setAmount(n);
             s.setAmount(s.getAmount() - n);
-            container.getInventory().setItem(i, s.getAmount() <= 0 ? null : s);
+            inventory.setItem(i, s.getAmount() <= 0 ? null : s);
             return taken;
         }
         return null;
     }
 
-    static void giveBack(Container container, ItemStack left) {
+    static void giveBack(Inventory inventory, ItemStack left) {
         if (left != null) {
-            container.getInventory().addItem(left);
+            inventory.addItem(left);
         }
     }
 }

@@ -24,9 +24,22 @@ final class Goggles {
             Block target = p.getTargetBlockExact(RANGE);
             KineticPart part = target == null ? null : kinetics.partAt(target);
             if (part != null) {
-                p.sendActionBar(Text.mm(describe(part)));
+                p.sendActionBar(Text.mm(info(part)));
             }
         }
+    }
+
+    String info(KineticPart part) {
+        return switch (part.type) {
+            case FLUID_TANK -> "<gold>Fluid Tank <dark_gray>| " + kinetics.tanks.describe(kinetics.tanks.column(part));
+            case BLAZE_BURNER -> {
+                Boilers.Burner b = kinetics.boilers.burner(part);
+                yield "<gold>Blaze Burner <dark_gray>| " + (b.burn <= 0 ? "<gray>Out of fuel"
+                        : (b.superheated ? "<light_purple>Superheated" : "<gold>Burning") + " <gray>for <white>" + Text.duration(b.burn * 50L));
+            }
+            case STEAM_ENGINE -> describe(part) + " <dark_gray>| <gray>Boiler level <white>" + part.boilerLevel;
+            default -> describe(part);
+        };
     }
 
     static String describe(KineticPart part) {

@@ -13,8 +13,6 @@ final class KineticsConfig {
     int creativeMotorStep = 16;
     double waterWheelSpeed = 8;
     double waterWheelCapacity = 32;
-    int breakHits = 3;
-    int breakHitsWithTool = 2;
     double beltDivider = 512;
     int beltMaxLength = 20;
     int millTicks = 100;
@@ -25,6 +23,13 @@ final class KineticsConfig {
     double sailsPerRpm = 4;
     double windmillMaxSpeed = 16;
     double windmillCapacity = 64;
+    int tankCapacity = 8000;
+    int tankMaxHeight = 16;
+    double pumpFluidPerRpm = 2;
+    double pumpItemsPerRpm = 0.25;
+    double steamEngineSpeed = 16;
+    double steamCapacityPerLevel = 64;
+    int boilerWaterPerLevel = 2;
     final Map<PartType, Double> impact = new EnumMap<>(PartType.class);
 
     void load(ConfigurationSection c) {
@@ -34,6 +39,7 @@ final class KineticsConfig {
         impact.put(PartType.MECHANICAL_PRESS, 8.0);
         impact.put(PartType.ENCASED_FAN, 2.0);
         impact.put(PartType.CRUSHING_WHEEL, 8.0);
+        impact.put(PartType.MECHANICAL_PUMP, 4.0);
         if (c == null) {
             return;
         }
@@ -44,8 +50,6 @@ final class KineticsConfig {
         creativeMotorStep = Math.max(1, c.getInt("creative-motor.step", 16));
         waterWheelSpeed = Math.max(1, c.getDouble("water-wheel.speed", 8));
         waterWheelCapacity = Math.max(0, c.getDouble("water-wheel.capacity-per-rpm", 32));
-        breakHits = Math.max(1, c.getInt("break-hits", 3));
-        breakHitsWithTool = Math.max(1, c.getInt("break-hits-with-tool", 2));
         beltDivider = Math.max(16, c.getDouble("belt.rpm-per-block-per-tick", 512));
         beltMaxLength = Math.max(2, c.getInt("belt.max-length", 20));
         millTicks = Math.max(1, c.getInt("processing.millstone-ticks", 100));
@@ -56,6 +60,13 @@ final class KineticsConfig {
         sailsPerRpm = Math.max(0.1, c.getDouble("windmill.sails-per-rpm", 4));
         windmillMaxSpeed = Math.max(1, c.getDouble("windmill.max-speed", 16));
         windmillCapacity = Math.max(0, c.getDouble("windmill.capacity-per-rpm", 64));
+        tankCapacity = Math.max(1000, c.getInt("fluids.tank-capacity", 8000));
+        tankMaxHeight = Math.max(1, c.getInt("fluids.tank-max-height", 16));
+        pumpFluidPerRpm = Math.max(0.1, c.getDouble("fluids.pump-mb-per-rpm", 2));
+        pumpItemsPerRpm = Math.max(0.01, c.getDouble("fluids.pump-items-per-rpm", 0.25));
+        steamEngineSpeed = Math.max(1, c.getDouble("steam.engine-speed", 16));
+        steamCapacityPerLevel = Math.max(0, c.getDouble("steam.capacity-per-rpm-per-level", 64));
+        boilerWaterPerLevel = Math.max(0, c.getInt("steam.water-per-level", 2));
         ConfigurationSection s = c.getConfigurationSection("stress-impact");
         if (s != null) {
             for (String key : s.getKeys(false)) {

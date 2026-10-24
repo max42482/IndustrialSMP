@@ -60,7 +60,26 @@ public enum PartType {
             "A shaft with a dial showing how much of the network's stress capacity is used."),
     WINDMILL_BEARING("Windmill Bearing", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.OAK_SLAB, "windmill_bearing",
             "Build sails from wool in front of it, then right-click to start it.",
-            "More sails = faster. Sneak + right-click: change direction. Power comes out the back.");
+            "More sails = faster. Sneak + right-click: change direction. Power comes out the back."),
+
+    FLUID_PIPE("Pipe", Orientation.AXIS, Material.WAXED_OXIDIZED_COPPER_CHAIN, Material.LIGHTNING_ROD, "fluid_pipe",
+            "Connects pumps, tanks, chests and machines.",
+            "Carries fluids and items when a pump pushes them."),
+    MECHANICAL_PUMP("Mechanical Pump", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.COPPER_BULB, "mechanical_pump",
+            "Moves fluids and items through pipes, from its back to its front.",
+            "Power it from the side. Faster = more per second. Reverse the spin to reverse the flow."),
+    FLUID_TANK("Fluid Tank", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.GLASS, "fluid_tank", 0, Axis.Y, 0,
+            "Holds 8 buckets. Stack them to make a bigger tank.",
+            "Use buckets on it, or pump fluids in and out."),
+    ITEM_VAULT("Item Vault", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.BARREL, "item_vault", 54, Axis.Y, 0,
+            "Holds 54 stacks. Right-click to open.",
+            "Vaults touching each other fill up together."),
+    STEAM_ENGINE("Steam Engine", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.PISTON, "steam_engine",
+            "Place on the side of a fluid tank full of water with heat under it.",
+            "Power comes out the front. Bigger, hotter boilers give more."),
+    BLAZE_BURNER("Blaze Burner", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.CAMPFIRE, "blaze_burner", 0, Axis.Y, 0,
+            "Heats the tank above it. Feed it fuel with right-click, a funnel or a pipe.",
+            "Blaze rods and blaze powder make it superheated.");
 
     public enum Orientation { AXIS, FACING }
 
@@ -104,7 +123,7 @@ public enum PartType {
     }
 
     public boolean isSource() {
-        return this == HAND_CRANK || this == CREATIVE_MOTOR || this == WATER_WHEEL || this == WINDMILL_BEARING;
+        return this == HAND_CRANK || this == CREATIVE_MOTOR || this == WATER_WHEEL || this == WINDMILL_BEARING || this == STEAM_ENGINE;
     }
 
     public boolean hasInvisibleHost() {

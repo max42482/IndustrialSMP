@@ -19,7 +19,8 @@ final class Funnels {
             return;
         }
         Block behind = funnel.block().getRelative(funnel.facing.getOppositeFace());
-        if (!(behind.getState() instanceof Container container)) {
+        org.bukkit.inventory.Inventory container = kinetics.ports.inventoryAt(behind);
+        if (container == null) {
             return;
         }
         Block front = funnel.block().getRelative(funnel.facing);

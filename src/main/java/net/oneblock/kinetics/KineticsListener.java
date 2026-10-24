@@ -89,6 +89,25 @@ final class KineticsListener implements Listener {
         kinetics.breakPart(part, event.getPlayer().getGameMode() != GameMode.CREATIVE);
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNeighborPlace(BlockPlaceEvent event) {
+        refreshPipesLater(event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNeighborBreak(BlockBreakEvent event) {
+        refreshPipesLater(event.getBlock());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNeighborBucket(PlayerBucketEmptyEvent event) {
+        refreshPipesLater(event.getBlock());
+    }
+
+    private void refreshPipesLater(Block block) {
+        org.bukkit.Bukkit.getScheduler().runTask(kinetics.plugin, () -> kinetics.pipes.refreshAround(block));
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onPick(PlayerPickBlockEvent event) {
         KineticPart part = kinetics.partAt(event.getBlock());
