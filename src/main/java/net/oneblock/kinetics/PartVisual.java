@@ -195,17 +195,28 @@ final class PartVisual {
                 list.add(Piece.custom("gauge_needle", dial));
                 list.add(Piece.custom("gauge_needle", dial.getOppositeFace()));
             }
-            case FLUID_PIPE -> {
-                list.add(new Piece("pipe_core", BlockFace.SOUTH, null));
+            case FLUID_PIPE, CABLE -> {
+                String kind = p.type == PartType.CABLE ? "cable" : "pipe";
+                list.add(new Piece(kind + "_core", BlockFace.SOUTH, null));
                 java.util.Set<BlockFace> arms = p.state instanceof java.util.Set<?> s && !s.isEmpty()
                         ? s.stream().map(BlockFace.class::cast).collect(java.util.stream.Collectors.toSet())
                         : new java.util.HashSet<>(Faces.alongAxis(p.axis));
                 for (BlockFace f : Faces.ALL) {
                     if (arms.contains(f)) {
-                        list.add(new Piece("pipe_arm", f, null));
+                        list.add(new Piece(kind + "_arm", f, null));
                     }
                 }
             }
+            case ALTERNATOR -> {
+                list.add(new Piece("alternator_casing", axisFace, null));
+                list.add(new Piece("alternator_rotor", axisFace, axisFace));
+            }
+            case ELECTRIC_MOTOR -> {
+                list.add(new Piece("motor_body", p.facing, null));
+                list.add(new Piece("shaft_half", p.facing, p.facing));
+            }
+            case ACCUMULATOR -> list.add(new Piece("accumulator", BlockFace.SOUTH, null));
+            case CONNECTOR -> list.add(new Piece("connector", p.facing, null));
             case MECHANICAL_PUMP -> {
                 list.add(new Piece("pump_body", p.facing, null));
                 list.add(new Piece("pump_cog", p.facing, p.facing));

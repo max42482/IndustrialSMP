@@ -35,6 +35,7 @@ public final class KineticPart {
     int crankDirection = 1;
     double waterSpeed;
     int boilerLevel;
+    boolean energized;
     float drillProgress;
     long drillTarget = Long.MIN_VALUE;
     int drillStage = -1;
@@ -92,14 +93,14 @@ public final class KineticPart {
 
     List<BlockFace> connectFaces() {
         return switch (type) {
-            case SHAFT, COGWHEEL, LARGE_COGWHEEL, GEARSHIFT, WATER_WHEEL, MECHANICAL_PRESS, CRUSHING_WHEEL,
+            case SHAFT, COGWHEEL, LARGE_COGWHEEL, GEARSHIFT, WATER_WHEEL, MECHANICAL_PRESS, CRUSHING_WHEEL, ALTERNATOR,
                  SPEEDOMETER, STRESSOMETER -> Faces.alongAxis(axis);
             case CLUTCH -> powered ? List.of() : Faces.alongAxis(axis);
             case GEARBOX -> Faces.around(axis);
             case HAND_CRANK, CREATIVE_MOTOR -> List.of(facing);
             case MECHANICAL_DRILL, ENCASED_FAN, WINDMILL_BEARING -> List.of(facing.getOppositeFace());
             case MECHANICAL_PUMP -> Faces.around(axis);
-            case STEAM_ENGINE -> List.of(facing);
+            case STEAM_ENGINE, ELECTRIC_MOTOR -> List.of(facing);
             case MILLSTONE -> List.of(BlockFace.DOWN);
             case BELT -> {
                 List<BlockFace> faces = new ArrayList<>(Faces.alongAxis(axis));
@@ -107,7 +108,7 @@ public final class KineticPart {
                 faces.add(facing.getOppositeFace());
                 yield faces;
             }
-            case DEPOT, FUNNEL, FLUID_PIPE, FLUID_TANK, ITEM_VAULT, BLAZE_BURNER -> List.of();
+            case DEPOT, FUNNEL, FLUID_PIPE, FLUID_TANK, ITEM_VAULT, BLAZE_BURNER, ACCUMULATOR, CONNECTOR, CABLE -> List.of();
         };
     }
 
@@ -120,7 +121,8 @@ public final class KineticPart {
 
     double faceK(BlockFace face) {
         return switch (type) {
-            case GEARBOX, HAND_CRANK, CREATIVE_MOTOR, MECHANICAL_DRILL, ENCASED_FAN, WINDMILL_BEARING, MECHANICAL_PUMP, STEAM_ENGINE -> 1;
+            case GEARBOX, HAND_CRANK, CREATIVE_MOTOR, MECHANICAL_DRILL, ENCASED_FAN, WINDMILL_BEARING, MECHANICAL_PUMP, STEAM_ENGINE,
+                 ELECTRIC_MOTOR -> 1;
             case GEARSHIFT -> Faces.isPositive(face) || powered ? 1 : -1;
             case BELT -> face == facing ? 1 : face == facing.getOppositeFace() ? -1 : Faces.isPositive(face) ? 1 : -1;
             default -> Faces.isPositive(face) ? 1 : -1;
@@ -134,6 +136,7 @@ public final class KineticPart {
             case WATER_WHEEL -> waterSpeed;
             case WINDMILL_BEARING -> Windmills.speed(this, config);
             case STEAM_ENGINE -> boilerLevel > 0 ? config.steamEngineSpeed : 0;
+            case ELECTRIC_MOTOR -> energized ? motorSpeed : 0;
             default -> 0;
         };
     }
@@ -145,6 +148,7 @@ public final class KineticPart {
             case WATER_WHEEL -> config.waterWheelCapacity;
             case WINDMILL_BEARING -> config.windmillCapacity;
             case STEAM_ENGINE -> config.steamCapacityPerLevel * boilerLevel;
+            case ELECTRIC_MOTOR -> config.motorCapacityPerRpm;
             default -> 0;
         };
     }

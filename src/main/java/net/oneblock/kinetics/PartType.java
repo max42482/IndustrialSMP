@@ -79,7 +79,22 @@ public enum PartType {
             "Power comes out the front. Bigger, hotter boilers give more."),
     BLAZE_BURNER("Blaze Burner", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.CAMPFIRE, "blaze_burner", 0, Axis.Y, 0,
             "Heats the tank above it. Feed it fuel with right-click, a funnel or a pipe.",
-            "Blaze rods and blaze powder make it superheated.");
+            "Blaze rods and blaze powder make it superheated."),
+
+    ALTERNATOR("Alternator", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.LIGHTNING_ROD, "alternator",
+            "Turns rotation into energy (FE). The faster it spins, the more it makes.",
+            "Connect it with cables or connectors."),
+    ELECTRIC_MOTOR("Electric Motor", Orientation.FACING, Material.PETRIFIED_OAK_SLAB, Material.OBSERVER, "electric_motor",
+            "Turns energy back into rotation at any speed.",
+            "Right-click: faster, sneak + right-click: slower."),
+    ACCUMULATOR("Accumulator", Orientation.AXIS, Material.PETRIFIED_OAK_SLAB, Material.REDSTONE_BLOCK, "accumulator", 0, Axis.Y, 0,
+            "Stores energy for later.",
+            "Right-click to see how full it is."),
+    CONNECTOR("Connector", Orientation.FACING, Material.WAXED_OXIDIZED_COPPER_CHAIN, Material.END_ROD, "connector",
+            "Place it on an electric block, then string wire between connectors.",
+            "Use a Wire Spool on two connectors to make a power line."),
+    CABLE("Cable", Orientation.AXIS, Material.WAXED_OXIDIZED_COPPER_CHAIN, Material.BLACK_CANDLE, "cable",
+            "Carries energy between blocks it touches.");
 
     public enum Orientation { AXIS, FACING }
 
@@ -123,7 +138,12 @@ public enum PartType {
     }
 
     public boolean isSource() {
-        return this == HAND_CRANK || this == CREATIVE_MOTOR || this == WATER_WHEEL || this == WINDMILL_BEARING || this == STEAM_ENGINE;
+        return this == HAND_CRANK || this == CREATIVE_MOTOR || this == WATER_WHEEL || this == WINDMILL_BEARING || this == STEAM_ENGINE
+                || this == ELECTRIC_MOTOR;
+    }
+
+    public boolean electric() {
+        return this == ALTERNATOR || this == ELECTRIC_MOTOR || this == ACCUMULATOR || this == CONNECTOR || this == CABLE;
     }
 
     public boolean hasInvisibleHost() {

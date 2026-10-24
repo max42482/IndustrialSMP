@@ -73,6 +73,7 @@ public final class KineticsModule {
     final Pipes pipes = new Pipes(this);
     final Vaults vaults = new Vaults(this);
     final Boilers boilers = new Boilers(this);
+    final Energy energy = new Energy(this);
     private final ResourcePackHost pack;
     private final Set<KineticPart> dirty = new LinkedHashSet<>();
     private final Set<KineticPart> activeCranks = new HashSet<>();
@@ -120,6 +121,7 @@ public final class KineticsModule {
             task.cancel();
         }
         pack.stop();
+        energy.clear();
         processing.unload();
         Set<Chunk> chunks = new HashSet<>();
         for (KineticPart p : registry.all()) {
@@ -144,6 +146,8 @@ public final class KineticsModule {
             case FLUID_TANK -> tanks.refresh(p);
             case BLAZE_BURNER -> boilers.refresh(p);
             case FLUID_PIPE -> pipes.refresh(p);
+            case CABLE -> refreshCable(p);
+            case CONNECTOR -> energy.load(p);
             default -> {
             }
         }
@@ -157,6 +161,7 @@ public final class KineticsModule {
             case FLUID_TANK -> tanks.unload(p);
             case ITEM_VAULT -> vaults.unload(p);
             case BLAZE_BURNER -> boilers.unload(p);
+            case CONNECTOR -> energy.unload(p);
             default -> {
             }
         }
@@ -167,6 +172,7 @@ public final class KineticsModule {
     }
 
     void loadChunk(Chunk chunk) {
+        energy.markDirty();
         for (KineticPart p : registry.read(chunk)) {
             if (registry.get(p.world, p.x, p.y, p.z) != null) {
                 continue;
@@ -187,6 +193,7 @@ public final class KineticsModule {
     }
 
     void unloadChunk(Chunk chunk) {
+        energy.markDirty();
         Set<KineticPart> parts = registry.inChunk(chunk.getWorld(), chunk.getX(), chunk.getZ());
         if (parts.isEmpty()) {
             return;
@@ -236,7 +243,7 @@ public final class KineticsModule {
         if (axis == Axis.Y && (type == PartType.MECHANICAL_PRESS || type == PartType.CRUSHING_WHEEL)) {
             axis = Faces.axisOf(player.getFacing());
         }
-        BlockFace facing = type == PartType.FUNNEL ? face : face.getOppositeFace();
+        BlockFace facing = type == PartType.FUNNEL || type == PartType.CONNECTOR ? face : face.getOppositeFace();
         if (type == PartType.MECHANICAL_DRILL && !player.isSneaking()) {
             BlockFace input = drillInput(target, clicked, face);
             if (input != null) {
@@ -287,6 +294,8 @@ public final class KineticsModule {
         part.visual.spawn();
         loadExtras(part);
         pipes.refreshAround(target);
+        refreshCablesAround(target);
+        energy.markDirty();
         registry.save(part);
         target.getWorld().playSound(target.getLocation(), Sound.BLOCK_WOOD_PLACE, 1f, 1f);
         return true;
@@ -353,6 +362,8 @@ public final class KineticsModule {
         loadExtras(part);
         registry.save(part);
         pipes.refreshAround(target);
+        refreshCablesAround(target);
+        energy.markDirty();
         dirty.add(part);
         return part;
     }
@@ -367,6 +378,7 @@ public final class KineticsModule {
             case MILLSTONE -> millstones.dropContents(part);
             case CRUSHING_WHEEL -> crushers.dropContents(part);
             case ITEM_VAULT -> vaults.dropContents(part);
+            case CONNECTOR -> energy.removeWires(part, dropItem);
             case WINDMILL_BEARING -> {
                 if (part.state instanceof Windmills.Sails s && !s.blocks.isEmpty()) {
                     windmills.disassemble(part, s);
@@ -396,9 +408,41 @@ public final class KineticsModule {
         registry.save(part);
         dirty.addAll(neighbors);
         pipes.refreshAround(part.block());
+        refreshCablesAround(part.block());
+        energy.markDirty();
+    }
+
+    void refreshCable(KineticPart cable) {
+        java.util.Set<BlockFace> now = java.util.EnumSet.noneOf(BlockFace.class);
+        for (BlockFace f : Faces.ALL) {
+            KineticPart n = partAt(cable.block().getRelative(f));
+            if (n != null && n.type.electric()) {
+                now.add(f);
+            }
+        }
+        if (now.equals(cable.state) || cable.visual == null) {
+            cable.state = now;
+            return;
+        }
+        cable.state = now;
+        cable.visual.remove();
+        cable.visual = new PartVisual(cable);
+        cable.visual.spawn();
+    }
+
+    void refreshCablesAround(Block block) {
+        for (BlockFace f : Faces.ALL) {
+            KineticPart p = partAt(block.getRelative(f));
+            if (p != null && p.type == PartType.CABLE) {
+                refreshCable(p);
+            }
+        }
     }
 
     boolean use(Player player, KineticPart part, BlockFace face, EquipmentSlot hand, ItemStack item) {
+        if (energy.interact(player, part, item)) {
+            return true;
+        }
         PartType held = items.partOf(item);
         if (held == PartType.BELT) {
             belts.connectorClick(player, part, item, hand);
@@ -435,6 +479,12 @@ public final class KineticsModule {
             }
             case BLAZE_BURNER -> {
                 return boilers.interact(player, part, item);
+            }
+            case ELECTRIC_MOTOR -> {
+                if (!emptyHand) {
+                    return false;
+                }
+                adjustMotor(part, player);
             }
             case ITEM_VAULT -> {
                 if (player.isSneaking() && !emptyHand) {
@@ -510,7 +560,7 @@ public final class KineticsModule {
         part.motorSpeed = Math.clamp(speed, -max, max);
         registry.save(part);
         dirty.add(part);
-        player.sendActionBar(Text.mm("<light_purple>Creative Motor: <white>" + part.motorSpeed + " RPM"
+        player.sendActionBar(Text.mm("<light_purple>" + part.type.displayName + ": <white>" + part.motorSpeed + " RPM"
                 + (part.motorSpeed == 0 ? " <gray>(stopped)" : "")));
     }
 
@@ -543,6 +593,7 @@ public final class KineticsModule {
                 }
             }
         }
+        energy.tick(tick);
         solvePending();
         for (KineticPart p : all) {
             if (registry.get(p.world, p.x, p.y, p.z) != p) {

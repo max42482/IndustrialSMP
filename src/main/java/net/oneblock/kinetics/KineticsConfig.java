@@ -30,6 +30,11 @@ final class KineticsConfig {
     double steamEngineSpeed = 16;
     double steamCapacityPerLevel = 64;
     int boilerWaterPerLevel = 2;
+    double fePerRpm = 1;
+    double motorFePerRpm = 4;
+    double motorCapacityPerRpm = 16;
+    long accumulatorCapacity = 500_000;
+    int maxWireLength = 16;
     final Map<PartType, Double> impact = new EnumMap<>(PartType.class);
 
     void load(ConfigurationSection c) {
@@ -40,6 +45,7 @@ final class KineticsConfig {
         impact.put(PartType.ENCASED_FAN, 2.0);
         impact.put(PartType.CRUSHING_WHEEL, 8.0);
         impact.put(PartType.MECHANICAL_PUMP, 4.0);
+        impact.put(PartType.ALTERNATOR, 8.0);
         if (c == null) {
             return;
         }
@@ -67,6 +73,11 @@ final class KineticsConfig {
         steamEngineSpeed = Math.max(1, c.getDouble("steam.engine-speed", 16));
         steamCapacityPerLevel = Math.max(0, c.getDouble("steam.capacity-per-rpm-per-level", 64));
         boilerWaterPerLevel = Math.max(0, c.getInt("steam.water-per-level", 2));
+        fePerRpm = Math.max(0, c.getDouble("energy.alternator-fe-per-rpm", 1));
+        motorFePerRpm = Math.max(0, c.getDouble("energy.motor-fe-per-rpm", 4));
+        motorCapacityPerRpm = Math.max(0, c.getDouble("energy.motor-capacity-per-rpm", 16));
+        accumulatorCapacity = Math.max(1000, c.getLong("energy.accumulator-capacity", 500_000));
+        maxWireLength = Math.max(2, c.getInt("energy.max-wire-length", 16));
         ConfigurationSection s = c.getConfigurationSection("stress-impact");
         if (s != null) {
             for (String key : s.getKeys(false)) {

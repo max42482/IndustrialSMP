@@ -38,6 +38,8 @@ final class Goggles {
                         : (b.superheated ? "<light_purple>Superheated" : "<gold>Burning") + " <gray>for <white>" + Text.duration(b.burn * 50L));
             }
             case STEAM_ENGINE -> describe(part) + " <dark_gray>| <gray>Boiler level <white>" + part.boilerLevel;
+            case ACCUMULATOR, CONNECTOR, CABLE -> "<gold>" + part.type.displayName + " <dark_gray>| " + kinetics.energy.describe(part);
+            case ALTERNATOR, ELECTRIC_MOTOR -> describe(part) + " <dark_gray>| " + kinetics.energy.describe(part);
             default -> describe(part);
         };
     }

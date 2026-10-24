@@ -67,6 +67,9 @@ final class KineticsListener implements Listener {
             return;
         }
         if (held == null) {
+            if (KineticItems.WIRE_SPOOL.equals(kinetics.items.idOf(item))) {
+                event.setCancelled(true);
+            }
             return;
         }
         event.setCancelled(true);

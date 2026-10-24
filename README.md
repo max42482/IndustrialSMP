@@ -21,11 +21,14 @@ Jar ends up in `build/libs/`. Vault is optional.
 - Transmission: shaft, cogwheels, gearbox, clutch, gearshift, belts
 - Machines: drill, millstone, crushing wheels, press, encased fan, depot, funnel
 - Fluids and storage: pipe, mechanical pump, fluid tank, item vault, steam engine, blaze burner
+- Electricity: alternator, electric motor, accumulator, cable, connector, wire spool
 - Info: speedometer, stressometer, engineer's goggles
 
 Ore doubling works too: crush raw ore, then smelt it or wash it with a fan.
 
 **Fluids and storage.** Pipes connect by themselves to pumps, tanks, chests, vaults and machines. A powered pump moves fluids and items from the pipes behind it to the pipes in front. Fluid tanks hold 8 buckets per block and stack. Item vaults hold 54 stacks. Put a steam engine on the side of a water tank with heat under it (fire, lava, a blaze burner) for big power.
+
+**Electricity.** Alternators turn rotation into FE, electric motors turn FE back into rotation (you lose half on the way). Anything electric that touches connects, cables carry power block to block, and a wire spool strings power lines between connectors up to 16 blocks apart. Accumulators store the extra.
 
 Recipes are locked at first. You earn cogs from milestones and spend them in `/is unlocks`.
 

@@ -164,6 +164,23 @@ public final class MachineUnlocks implements Listener {
                 shapeless(key, items.part(PartType.BLAZE_BURNER, 1), List.of(ironSheet, ironSheet,
                         new RecipeChoice.MaterialChoice(Material.NETHERRACK), new RecipeChoice.MaterialChoice(Material.BLAZE_ROD))));
 
+        RecipeChoice copperIngot = new RecipeChoice.MaterialChoice(Material.COPPER_INGOT);
+        RecipeChoice redstoneBlock = new RecipeChoice.MaterialChoice(Material.REDSTONE_BLOCK);
+        register(costs, "alternator", "Alternator", () -> items.part(PartType.ALTERNATOR, 1), "shaft, 4 copper sheets + redstone block", key ->
+                shapeless(key, items.part(PartType.ALTERNATOR, 1), List.of(shaft, copperSheet, copperSheet, copperSheet, copperSheet, redstoneBlock)));
+        register(costs, "electric_motor", "Electric Motor", () -> items.part(PartType.ELECTRIC_MOTOR, 1),
+                "shaft, 2 iron sheets, 2 copper sheets + redstone block", key ->
+                shapeless(key, items.part(PartType.ELECTRIC_MOTOR, 1), List.of(shaft, ironSheet, ironSheet, copperSheet, copperSheet, redstoneBlock)));
+        register(costs, "accumulator", "Accumulator", () -> items.part(PartType.ACCUMULATOR, 1), "4 iron sheets, 2 redstone blocks + copper block", key ->
+                shapeless(key, items.part(PartType.ACCUMULATOR, 1), List.of(ironSheet, ironSheet, ironSheet, ironSheet, redstoneBlock,
+                        redstoneBlock, new RecipeChoice.MaterialChoice(Material.COPPER_BLOCK))));
+        register(costs, "connector", "Connector x4", () -> items.part(PartType.CONNECTOR, 1), "copper ingot on andesite alloy", key ->
+                shaped(key, items.part(PartType.CONNECTOR, 4), new String[]{"C", "A"}, Map.of('C', copperIngot, 'A', alloy)));
+        register(costs, "cable", "Cable x4", () -> items.part(PartType.CABLE, 1), "copper ingot + 2 dried kelp", key ->
+                shapeless(key, items.part(PartType.CABLE, 4), List.of(copperIngot, kelp, kelp)));
+        register(costs, "wire_spool", "Wire Spool x2", () -> items.wireSpool(1), "3 copper ingots + stick", key ->
+                shapeless(key, items.wireSpool(2), List.of(copperIngot, copperIngot, copperIngot, new RecipeChoice.MaterialChoice(Material.STICK))));
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             syncRecipeBook(p);
         }

@@ -14,6 +14,7 @@ import java.util.List;
 public final class KineticItems {
     public static final String GOGGLES = "goggles";
     public static final String ALLOY = "andesite_alloy";
+    public static final String WIRE_SPOOL = "wire_spool";
     private final NamespacedKey key;
     private boolean useModels;
 
@@ -49,6 +50,17 @@ public final class KineticItems {
         if (useModels) {
             ItemMeta meta = item.getItemMeta();
             meta.setItemModel(new NamespacedKey("oneblock", ALLOY));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    public ItemStack wireSpool(int amount) {
+        ItemStack item = make(Material.STRING, WIRE_SPOOL, "<#c8743c>Wire Spool",
+                List.of("<gray>Right-click two connectors to string", "<gray>a power line between them."), amount);
+        if (useModels) {
+            ItemMeta meta = item.getItemMeta();
+            meta.setItemModel(new NamespacedKey("oneblock", WIRE_SPOOL));
             item.setItemMeta(meta);
         }
         return item;

@@ -93,6 +93,12 @@ progression:
     item_vault: 3
     steam_engine: 8
     blaze_burner: 5
+    alternator: 6
+    electric_motor: 6
+    accumulator: 5
+    connector: 2
+    cable: 2
+    wire_spool: 2
 
 # Create-style rotation. Speeds are in RPM, stress in SU (stress units), like Create.
 kinetics:
@@ -141,6 +147,14 @@ kinetics:
     capacity-per-rpm-per-level: 64
     # Water used per tick per level, per engine.
     water-per-level: 2
+  energy:
+    # Alternators make RPM x this FE per tick and use 8 SU per RPM.
+    alternator-fe-per-rpm: 1
+    # Electric motors use RPM x this FE per tick and give this many SU per RPM. Half the power is lost on the way.
+    motor-fe-per-rpm: 4
+    motor-capacity-per-rpm: 16
+    accumulator-capacity: 500000
+    max-wire-length: 16
   # Stress a part uses per RPM it turns at. Shafts and gears are free, like in Create.
   # A drill at 8 RPM uses 4 x 8 = 32 SU, so one water wheel runs 8 drills - or fewer, faster ones.
   stress-impact:
@@ -156,6 +170,7 @@ kinetics:
     encased_fan: 2
     crushing_wheel: 8
     mechanical_pump: 4
+    alternator: 8
 
 # The machines' 3D models. The plugin builds the pack and can serve it itself.
 resource-pack:

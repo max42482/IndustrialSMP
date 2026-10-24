@@ -37,6 +37,7 @@ public final class KineticsCommand implements TabExecutor {
             case "at" -> at(sender, args);
             case "place" -> placeCommand(sender, args);
             case "windmill" -> windmillCommand(sender, args);
+            case "wire" -> wireCommand(sender, args);
             case "stats" -> {
                 int parts = kinetics.registry.all().size();
                 long networks = kinetics.registry.all().stream().map(p -> p.network).filter(java.util.Objects::nonNull).distinct().count();
@@ -78,6 +79,7 @@ public final class KineticsCommand implements TabExecutor {
         String what = args[1].toLowerCase(Locale.ROOT);
         if (what.equals("materials")) {
             items.add(kinetics.items.alloy(amount));
+            items.add(kinetics.items.wireSpool(amount));
             for (MaterialItem m : MaterialItem.values()) {
                 items.add(kinetics.items.material(m, amount));
             }
@@ -197,6 +199,26 @@ public final class KineticsCommand implements TabExecutor {
         }
     }
 
+    private void wireCommand(CommandSender sender, String[] args) {
+        if (args.length < 7) {
+            Text.send(sender, "<red>Usage: /kinetics wire [x] [y] [z] [x] [y] [z] [world]");
+            return;
+        }
+        org.bukkit.World world = args.length >= 8 ? Bukkit.getWorld(args[7])
+                : sender instanceof Player p ? p.getWorld() : Bukkit.getWorlds().getFirst();
+        try {
+            KineticPart a = world == null ? null : kinetics.partAt(world.getBlockAt(Integer.parseInt(args[1]), Integer.parseInt(args[2]), Integer.parseInt(args[3])));
+            KineticPart b = world == null ? null : kinetics.partAt(world.getBlockAt(Integer.parseInt(args[4]), Integer.parseInt(args[5]), Integer.parseInt(args[6])));
+            if (a == null || b == null || a.type != PartType.CONNECTOR || b.type != PartType.CONNECTOR) {
+                Text.send(sender, "<red>Both spots need a connector.");
+                return;
+            }
+            Text.send(sender, kinetics.energy.connect(a, b) ? "<gray>Wired." : "<red>Those can't be wired.");
+        } catch (NumberFormatException e) {
+            Text.send(sender, "<red>Coordinates must be whole numbers.");
+        }
+    }
+
     private void details(CommandSender to, KineticPart part) {
         Text.send(to, Goggles.describe(part));
         Network n = part.network;
@@ -230,6 +252,9 @@ public final class KineticsCommand implements TabExecutor {
         }
         if (part.type == PartType.STEAM_ENGINE) {
             to.sendMessage(Text.mm(" <gray>Boiler level: <white>" + part.boilerLevel));
+        }
+        if (part.type.electric()) {
+            to.sendMessage(Text.mm(" <gray>Energy: " + kinetics.energy.describe(part)));
         }
         if (part.type == PartType.BLAZE_BURNER) {
             Boilers.Burner b = kinetics.boilers.burner(part);

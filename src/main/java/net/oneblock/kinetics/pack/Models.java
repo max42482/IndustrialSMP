@@ -222,6 +222,60 @@ public final class Models {
 
         m.put("fluid_water", new Model(List.of(box(0, 0, 0, 16, 16, 16, WATER)), 16));
         m.put("fluid_lava", new Model(List.of(box(0, 0, 0, 16, 16, 16, LAVA)), 16));
+        phase6(m);
+    }
+
+    static final String RUBBER = "minecraft:block/black_wool";
+    static final String CERAMIC = "minecraft:block/white_terracotta";
+    static final String REDSTONE = "minecraft:block/redstone_block";
+
+    private static void phase6(Map<String, Model> m) {
+        List<Box> cableCore = List.of(box(6, 6, 6, 10, 10, 10, RUBBER));
+        m.put("cable_core", new Model(cableCore, 16));
+        m.put("cable_arm", new Model(List.of(box(6.5f, 6.5f, 10, 9.5f, 9.5f, 16, RUBBER)), 16));
+        m.put("cable", new Model(join(cableCore, List.of(box(6.5f, 6.5f, 0, 9.5f, 9.5f, 6, RUBBER), box(6.5f, 6.5f, 10, 9.5f, 9.5f, 16, RUBBER))), 16));
+
+        m.put("connector", new Model(List.of(
+                box(5, 5, 0, 11, 11, 2, METAL),
+                box(7, 7, 2, 9, 9, 6, METAL),
+                box(5, 5, 6, 11, 11, 7, CERAMIC),
+                box(5.5f, 5.5f, 7.5f, 10.5f, 10.5f, 8.5f, CERAMIC),
+                box(6, 6, 9, 10, 10, 10, CERAMIC),
+                box(7, 7, 10, 9, 9, 11, COPPER)), 14));
+
+        List<Box> altCasing = new ArrayList<>();
+        for (float[] c : new float[][]{{0, 0}, {14, 0}, {0, 14}, {14, 14}}) {
+            altCasing.add(box(c[0], c[1], 0, c[0] + 2, c[1] + 2, 16, METAL));
+        }
+        for (float z : new float[]{0, 14}) {
+            altCasing.add(box(2, 0, z, 14, 2, z + 2, COPPER));
+            altCasing.add(box(2, 14, z, 14, 16, z + 2, COPPER));
+            altCasing.add(box(0, 2, z, 2, 14, z + 2, COPPER));
+            altCasing.add(box(14, 2, z, 16, 14, z + 2, COPPER));
+        }
+        List<Box> rotor = new ArrayList<>(shaft(0, 16));
+        rotor.addAll(disc(10, 3, 13, REDSTONE, EIGHT));
+        m.put("alternator_casing", new Model(altCasing, 16));
+        m.put("alternator_rotor", new Model(rotor, 16));
+        m.put("alternator", new Model(join(altCasing, rotor), 16));
+
+        List<Box> motor = List.of(
+                box(2, 2, 0, 14, 14, 13, IRON),
+                box(1, 1, 3, 15, 15, 5, COPPER),
+                box(1, 1, 9, 15, 15, 11, COPPER),
+                box(3, 3, 13, 13, 13, 14, METAL));
+        m.put("motor_body", new Model(motor, 16));
+        m.put("electric_motor", new Model(join(motor, shaft(14, 17)), 16));
+
+        List<Box> battery = new ArrayList<>(frame(REDSTONE));
+        battery.add(box(3, 16, 3, 6, 17, 6, COPPER));
+        battery.add(box(10, 16, 10, 13, 17, 13, IRON));
+        m.put("accumulator", new Model(battery, 16));
+
+        List<Box> spool = new ArrayList<>(disc(10, 3, 13, COPPER, EIGHT));
+        spool.addAll(disc(14, 2, 3, PLANKS, EIGHT));
+        spool.addAll(disc(14, 13, 14, PLANKS, EIGHT));
+        m.put("wire_spool", new Model(spool, 14));
     }
 
     private static final float INSET = 0.04f;
