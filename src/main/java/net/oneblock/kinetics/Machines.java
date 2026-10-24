@@ -170,9 +170,14 @@ final class Machines {
                 left = new ArrayList<>(container.getInventory().addItem(left.toArray(new ItemStack[0])).values());
             }
         }
-        Location drop = target.getLocation().add(0.5, 0.5, 0.5);
+        Block above = target.getRelative(BlockFace.UP).isPassable() ? target.getRelative(BlockFace.UP)
+                : drill.block().getRelative(BlockFace.UP).isPassable() ? drill.block().getRelative(BlockFace.UP) : null;
         for (ItemStack item : left) {
-            target.getWorld().dropItemNaturally(drop, item);
+            if (above == null) {
+                target.getWorld().dropItemNaturally(target.getLocation().add(0.5, 0.5, 0.5), item);
+            } else {
+                target.getWorld().dropItem(above.getLocation().add(0.5, 0.05, 0.5), item, e -> e.setVelocity(new org.bukkit.util.Vector()));
+            }
         }
     }
 }

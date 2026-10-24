@@ -38,6 +38,7 @@ public final class IslandModule {
     final IslandReset reset = new IslandReset(this);
     private final Map<UUID, Invite> invites = new HashMap<>();
     int maxMembers = 4;
+    boolean keepInventory = true;
     private Material firstBlock = Material.GRASS_BLOCK;
 
     record Invite(long islandId, String from, long expires) {
@@ -74,6 +75,7 @@ public final class IslandModule {
             islands.borderSize = Math.max(16, c.getInt("border-size", 150));
             maxMembers = Math.max(0, c.getInt("max-members", 4));
             reset.cooldownMs = Math.max(0, c.getLong("reset-cooldown-minutes", 30)) * 60_000L;
+            keepInventory = c.getBoolean("keep-inventory-on-own-island", true);
             Material m = Material.matchMaterial(c.getString("first-block", "GRASS_BLOCK"));
             firstBlock = m == null || !m.isBlock() ? Material.GRASS_BLOCK : m;
         }

@@ -37,6 +37,8 @@ island:
   max-members: 4
   # Minutes an island owner has to wait between /is reset. Admins can always use /is admin reset.
   reset-cooldown-minutes: 30
+  # Players keep their items and XP when they die on their own island (or in the void under it).
+  keep-inventory-on-own-island: true
   first-block: GRASS_BLOCK
 
 # Where /spawn takes players. Leave world empty to use the centre of the island world, or use /setspawn in game.

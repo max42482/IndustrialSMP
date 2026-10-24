@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -16,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
@@ -24,6 +26,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -35,6 +38,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.util.Vector;
 
 import java.util.List;
 
@@ -91,6 +95,32 @@ final class IslandListener implements Listener {
         if (i != null) {
             module.oneBlock.broken(i);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onOneBlockDrops(BlockDropItemEvent event) {
+        Block b = event.getBlock();
+        if (!module.islands.isOneBlock(b) || !b.getRelative(0, 1, 0).isPassable()) {
+            return;
+        }
+        Location top = b.getLocation().add(0.5, 1.05, 0.5);
+        for (Item item : event.getItems()) {
+            b.getWorld().dropItem(top, item.getItemStack(), e -> e.setVelocity(new Vector()));
+        }
+        event.getItems().clear();
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDeath(PlayerDeathEvent event) {
+        Player p = event.getPlayer();
+        Island here = module.islands.at(p.getLocation());
+        if (!module.keepInventory || here == null || !here.isMember(p.getUniqueId())) {
+            return;
+        }
+        event.setKeepInventory(true);
+        event.getDrops().clear();
+        event.setKeepLevel(true);
+        event.setDroppedExp(0);
     }
 
     private Island oneBlockIsland(Block b) {
