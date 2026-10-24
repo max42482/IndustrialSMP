@@ -4,6 +4,7 @@ import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
 import net.oneblock.economy.util.Text;
 import net.oneblock.kinetics.event.DrillBreakBlockEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -38,6 +39,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -84,8 +86,26 @@ final class IslandListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onOneBlockBreak(BlockBreakEvent event) {
         Island i = oneBlockIsland(event.getBlock());
+        if (i == null) {
+            return;
+        }
+        module.oneBlock.broken(i);
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE || !event.isDropItems()) {
+            return;
+        }
+        Block b = event.getBlock();
+        boolean open = b.getRelative(0, 1, 0).isPassable();
+        Location at = b.getLocation().add(0.5, open ? 1.05 : 0.5, 0.5);
+        for (ItemStack bonus : module.oneBlock.bonusDrops(i, b.getType())) {
+            b.getWorld().dropItem(at, bonus, e -> e.setVelocity(new Vector()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onOneBlockDrillDrops(DrillBreakBlockEvent event) {
+        Island i = oneBlockIsland(event.getBlock());
         if (i != null) {
-            module.oneBlock.broken(i);
+            event.getDrops().addAll(module.oneBlock.bonusDrops(i, event.getBlock().getType()));
         }
     }
 

@@ -11,6 +11,10 @@
 # sequence: (natural phases) fixed blocks at the start of the phase, in order, before random ones.
 #           CHEST in the list = a loot chest. Plains' first entry is a new island's first block.
 #
+# starter-chest: exact items in the first CHEST of the sequence (instead of random loot).
+# chest-extras: extra items that can show up in this phase's chests: ITEM: [chance, min, max].
+# bonus-drops: extra drops when the OneBlock breaks: BLOCK: {ITEM: chance}.
+#
 # Avoid blocks that break the OneBlock by themselves: leaves (decay), ice (melts), flowers/cactus/sugar cane
 # (need support). Falling blocks like sand are fine - the OneBlock never falls.
 
@@ -30,6 +34,14 @@ natural:
     mob-chance: 0.03
     chest-chance: 0.012
     loot-table: chests/village/village_plains_house
+    starter-chest: {WATER_BUCKET: 2, LAVA_BUCKET: 1, WHEAT_SEEDS: 8, SUGAR_CANE: 3, CACTUS: 2, OAK_SAPLING: 2,
+                    BIRCH_SAPLING: 1, BONE_MEAL: 8, MELON_SEEDS: 2, PUMPKIN_SEEDS: 2, POTATO: 2, CARROT: 2, BREAD: 4}
+    chest-extras: {WHEAT_SEEDS: [0.6, 2, 6], SUGAR_CANE: [0.4, 1, 3], OAK_SAPLING: [0.4, 1, 2], BIRCH_SAPLING: [0.2, 1, 2],
+                   BONE_MEAL: [0.4, 2, 6], WATER_BUCKET: [0.15, 1, 1], CARROT: [0.2, 1, 3], POTATO: [0.2, 1, 3]}
+    bonus-drops:
+      GRASS_BLOCK: {WHEAT_SEEDS: 0.2}
+      OAK_LOG: {OAK_SAPLING: 0.04, APPLE: 0.03}
+      BIRCH_LOG: {BIRCH_SAPLING: 0.05}
   underground:
     name: "<gray>Underground"
     icon: STONE
@@ -41,6 +53,7 @@ natural:
     mob-chance: 0.025
     chest-chance: 0.012
     loot-table: chests/abandoned_mineshaft
+    chest-extras: {LAVA_BUCKET: [0.2, 1, 1], WATER_BUCKET: [0.15, 1, 1], TORCH: [0.4, 4, 12], BONE_MEAL: [0.2, 2, 5]}
   winter:
     name: "<aqua>Winter"
     icon: SNOW_BLOCK
@@ -52,6 +65,10 @@ natural:
     mob-chance: 0.025
     chest-chance: 0.012
     loot-table: chests/igloo_chest
+    chest-extras: {ICE: [0.5, 1, 4], SWEET_BERRIES: [0.4, 1, 4], SPRUCE_SAPLING: [0.3, 1, 2]}
+    bonus-drops:
+      SPRUCE_LOG: {SPRUCE_SAPLING: 0.05}
+      SNOW_BLOCK: {SWEET_BERRIES: 0.03}
   ocean:
     name: "<blue>Ocean"
     icon: PRISMARINE
@@ -63,6 +80,10 @@ natural:
     mob-chance: 0.02
     chest-chance: 0.015
     loot-table: chests/shipwreck_supply
+    chest-extras: {WATER_BUCKET: [0.4, 1, 2], KELP: [0.5, 2, 6], SEA_PICKLE: [0.3, 1, 3], SUGAR_CANE: [0.3, 1, 3]}
+    bonus-drops:
+      SAND: {KELP: 0.06}
+      CLAY: {SUGAR_CANE: 0.05}
   jungle:
     name: "<dark_green>Jungle"
     icon: JUNGLE_LOG
@@ -73,6 +94,10 @@ natural:
     mob-chance: 0.025
     chest-chance: 0.012
     loot-table: chests/jungle_temple
+    chest-extras: {COCOA_BEANS: [0.5, 1, 4], BAMBOO: [0.5, 1, 4], JUNGLE_SAPLING: [0.3, 1, 2], MELON_SEEDS: [0.3, 1, 3]}
+    bonus-drops:
+      JUNGLE_LOG: {JUNGLE_SAPLING: 0.05, COCOA_BEANS: 0.08}
+      BAMBOO_BLOCK: {BAMBOO: 0.2}
   red_desert:
     name: "<gold>Red Desert"
     icon: RED_SAND
@@ -83,6 +108,10 @@ natural:
     mob-chance: 0.025
     chest-chance: 0.012
     loot-table: chests/desert_pyramid
+    chest-extras: {CACTUS: [0.5, 1, 3], DEAD_BUSH: [0.3, 1, 2], SUGAR_CANE: [0.3, 1, 3]}
+    bonus-drops:
+      SAND: {CACTUS: 0.05}
+      RED_SAND: {CACTUS: 0.05}
   nether:
     name: "<red>Nether"
     icon: NETHERRACK
@@ -95,6 +124,10 @@ natural:
     mob-chance: 0.025
     chest-chance: 0.012
     loot-table: chests/nether_bridge
+    chest-extras: {LAVA_BUCKET: [0.4, 1, 1], NETHER_WART: [0.5, 1, 4], CRIMSON_FUNGUS: [0.2, 1, 2], WARPED_FUNGUS: [0.2, 1, 2]}
+    bonus-drops:
+      SOUL_SAND: {NETHER_WART: 0.1}
+      MAGMA_BLOCK: {LAVA_BUCKET: 0.02}
   idyll:
     name: "<light_purple>Idyll"
     icon: PINK_WOOL
@@ -106,6 +139,11 @@ natural:
     mob-chance: 0.03
     chest-chance: 0.015
     loot-table: chests/village/village_taiga_house
+    chest-extras: {BEETROOT_SEEDS: [0.4, 2, 5], PUMPKIN_SEEDS: [0.3, 1, 3], CHERRY_SAPLING: [0.3, 1, 2], POPPY: [0.3, 1, 3],
+                   DANDELION: [0.3, 1, 3], SUGAR_CANE: [0.3, 1, 3]}
+    bonus-drops:
+      GRASS_BLOCK: {WHEAT_SEEDS: 0.2, BEETROOT_SEEDS: 0.05}
+      CHERRY_LOG: {CHERRY_SAPLING: 0.05}
   deep_dark:
     name: "<dark_aqua>Deep Dark"
     icon: SCULK
@@ -117,6 +155,7 @@ natural:
     mob-chance: 0
     chest-chance: 0.015
     loot-table: chests/ancient_city
+    chest-extras: {LAVA_BUCKET: [0.2, 1, 1], GLOW_BERRIES: [0.3, 1, 3]}
   end:
     name: "<dark_purple>The End"
     icon: END_STONE
@@ -127,6 +166,7 @@ natural:
     mob-chance: 0.02
     chest-chance: 0.01
     loot-table: chests/end_city_treasure
+    chest-extras: {CHORUS_FRUIT: [0.4, 2, 6], CHORUS_FLOWER: [0.2, 1, 1]}
 
 bonus:
   mushroom_isle:
@@ -140,6 +180,7 @@ bonus:
     mob-chance: 0.03
     chest-chance: 0.012
     loot-table: chests/village/village_plains_house
+    chest-extras: {RED_MUSHROOM: [0.5, 1, 3], BROWN_MUSHROOM: [0.5, 1, 3]}
   scrapyard:
     name: "<#b0b7bd>Scrapyard"
     icon: RAW_IRON_BLOCK

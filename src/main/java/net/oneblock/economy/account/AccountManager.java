@@ -110,6 +110,15 @@ public final class AccountManager {
         return true;
     }
 
+    public synchronized List<UUID> all() {
+        return new ArrayList<>(accounts.keySet());
+    }
+
+    public synchronized void resetToStart(UUID uuid, String info) {
+        set(uuid, Currency.COINS, startingCoins, info);
+        set(uuid, Currency.COGS, startingCogs, info);
+    }
+
     public synchronized boolean transfer(UUID from, UUID to, Currency currency, long amount, String type, String info) {
         Account a = accounts.get(from);
         Account b = accounts.get(to);

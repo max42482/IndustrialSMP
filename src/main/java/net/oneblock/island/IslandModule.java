@@ -19,8 +19,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -83,7 +87,27 @@ public final class IslandModule {
         if (!file.exists()) {
             plugin.saveResource("phases.yml", false);
         }
-        phases.load(YamlConfiguration.loadConfiguration(file), plugin.getLogger());
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        InputStream bundled = plugin.getResource("phases.yml");
+        if (bundled != null) {
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(bundled, StandardCharsets.UTF_8));
+            for (String group : List.of("natural", "bonus")) {
+                ConfigurationSection have = yaml.getConfigurationSection(group);
+                ConfigurationSection def = defaults.getConfigurationSection(group);
+                if (have == null || def == null) {
+                    continue;
+                }
+                for (String id : have.getKeys(false)) {
+                    for (String key : List.of("starter-chest", "chest-extras", "bonus-drops")) {
+                        String path = id + "." + key;
+                        if (!have.contains(path) && def.contains(path)) {
+                            have.set(path, def.get(path));
+                        }
+                    }
+                }
+            }
+        }
+        phases.load(yaml, plugin.getLogger());
         if (islands.world == null) {
             islands.world = IslandWorld.load(c == null ? "oneblock_world" : c.getString("world", "oneblock_world"), islands.height);
         }
@@ -366,6 +390,18 @@ public final class IslandModule {
                 "<gray>Your inventory, money, cogs, unlocks", "<gray>and bought bonus phases stay.",
                 "<dark_gray>Milestone cogs only pay out once.");
         new ConfirmMenu(p, "<dark_red>Reset your island?", preview, () -> reset.start(i, null), null).open();
+    }
+
+    public boolean wipeIsland(UUID owner) {
+        Island i = islands.of(owner);
+        if (i == null || !i.owner.equals(owner)) {
+            return false;
+        }
+        i.best = 0;
+        islands.clearBonusPhases(i);
+        islands.save(i);
+        reset.start(i, null);
+        return true;
     }
 
     boolean resetNow(Island i, Runnable done) {

@@ -39,6 +39,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public final class OneblockEconomy extends JavaPlugin implements Listener {
@@ -195,5 +196,12 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
 
     public MarketManager market() {
         return market;
+    }
+
+    public boolean wipeProgress(UUID player, String by) {
+        accounts.resetToStart(player, "wiped by " + by);
+        unlocks.reset(player);
+        milestones.reset(player);
+        return islands.wipeIsland(player);
     }
 }

@@ -293,6 +293,15 @@ public final class MachineUnlocks implements Listener {
         return true;
     }
 
+    public void reset(UUID player) {
+        unlocked.remove(player);
+        db.execute("DELETE FROM player_unlocks WHERE uuid = ?", player.toString());
+        Player p = Bukkit.getPlayer(player);
+        if (p != null) {
+            syncRecipeBook(p);
+        }
+    }
+
     public void disable() {
         for (Unlock u : unlocks.values()) {
             Bukkit.removeRecipe(u.key(), false);

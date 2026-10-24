@@ -81,9 +81,83 @@ final class PhaseRegistry {
                     Money.fromCoins(c.getDouble("price-coins", 0)), c.getLong("price-cogs", 0),
                     blocks, mobs, c.getDouble("mob-chance", 0), c.getDouble("chest-chance", 0), c.getString("loot-table"),
                     sequence);
+            phase.starterChest = amounts(c.getConfigurationSection("starter-chest"), id, logger);
+            phase.chestExtras = extras(c.getConfigurationSection("chest-extras"), id, logger);
+            phase.bonusDrops = bonusDrops(c.getConfigurationSection("bonus-drops"), id, logger);
             phases.put(id, phase);
             (isBonus ? bonus : natural).add(phase);
         }
+    }
+
+    private static Material item(String key, String phase, Logger logger) {
+        Material m = Material.matchMaterial(key);
+        if (m == null || !m.isItem() || m.isAir()) {
+            logger.warning("phases.yml " + phase + ": '" + key + "' is not an item, skipped.");
+            return null;
+        }
+        return m;
+    }
+
+    private static Map<Material, Integer> amounts(ConfigurationSection s, String phase, Logger logger) {
+        Map<Material, Integer> map = new LinkedHashMap<>();
+        if (s != null) {
+            for (String key : s.getKeys(false)) {
+                Material m = item(key, phase, logger);
+                if (m != null && s.getInt(key) > 0) {
+                    map.put(m, s.getInt(key));
+                }
+            }
+        }
+        return map;
+    }
+
+    private static List<Phase.Extra> extras(ConfigurationSection s, String phase, Logger logger) {
+        List<Phase.Extra> list = new ArrayList<>();
+        if (s == null) {
+            return list;
+        }
+        for (String key : s.getKeys(false)) {
+            Material m = item(key, phase, logger);
+            List<?> values = s.getList(key);
+            if (m == null || values == null || values.isEmpty()) {
+                continue;
+            }
+            double chance = number(values, 0, 0);
+            int min = (int) number(values, 1, 1);
+            int max = (int) number(values, 2, min);
+            if (chance > 0 && min > 0) {
+                list.add(new Phase.Extra(m, chance, min, Math.max(min, max)));
+            }
+        }
+        return list;
+    }
+
+    private static double number(List<?> values, int index, double fallback) {
+        return index < values.size() && values.get(index) instanceof Number n ? n.doubleValue() : fallback;
+    }
+
+    private static Map<Material, Map<Material, Double>> bonusDrops(ConfigurationSection s, String phase, Logger logger) {
+        Map<Material, Map<Material, Double>> map = new LinkedHashMap<>();
+        if (s == null) {
+            return map;
+        }
+        for (String blockKey : s.getKeys(false)) {
+            Material block = Material.matchMaterial(blockKey);
+            ConfigurationSection drops = s.getConfigurationSection(blockKey);
+            if (block == null || drops == null) {
+                logger.warning("phases.yml " + phase + " bonus-drops: '" + blockKey + "' is not a block, skipped.");
+                continue;
+            }
+            Map<Material, Double> items = new LinkedHashMap<>();
+            for (String key : drops.getKeys(false)) {
+                Material m = item(key, phase, logger);
+                if (m != null && drops.getDouble(key) > 0) {
+                    items.put(m, drops.getDouble(key));
+                }
+            }
+            map.put(block, items);
+        }
+        return map;
     }
 
     Phase get(String id) {

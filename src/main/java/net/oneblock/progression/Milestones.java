@@ -106,6 +106,11 @@ public final class Milestones implements Listener, IslandProgressListener {
         }
     }
 
+    public void reset(UUID player) {
+        reached.remove(player);
+        db.execute("DELETE FROM player_milestones WHERE uuid = ?", player.toString());
+    }
+
     private void reward(UUID player, long cogs, String reason) {
         if (!accounts.exists(player)) {
             return;

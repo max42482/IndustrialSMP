@@ -184,6 +184,11 @@ final class IslandManager {
         db.execute("INSERT OR IGNORE INTO island_bonus_phases (island_id, phase) VALUES (?, ?)", i.id, phase);
     }
 
+    void clearBonusPhases(Island i) {
+        i.bonusPhases.clear();
+        db.execute("DELETE FROM island_bonus_phases WHERE island_id = ?", i.id);
+    }
+
     void save(Island i) {
         db.execute("UPDATE islands SET owner = ?, home_x = ?, home_y = ?, home_z = ?, home_yaw = ?, home_pitch = ?, blocks = ?, phase = ?, open = ?, best = ? WHERE id = ?",
                 i.owner.toString(), i.homeX, i.homeY, i.homeZ, i.homeYaw, i.homePitch, i.blocksBroken, i.selectedPhase, i.open ? 1 : 0, i.best, i.id);

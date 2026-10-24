@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public final class EcoCommand implements TabExecutor {
     private static final int HISTORY_PAGE = 10;
@@ -64,6 +65,7 @@ public final class EcoCommand implements TabExecutor {
                         : "<red>Failed - they don't have that much.");
             }
             case "history" -> history(sender, args);
+            case "wipe" -> wipe(sender, args);
             case "reload" -> {
                 try {
                     plugin.applyConfig();
@@ -83,6 +85,35 @@ public final class EcoCommand implements TabExecutor {
             default -> help(sender);
         }
         return true;
+    }
+
+    private void wipe(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            Text.send(sender, "<red>Usage: /eco wipe [player|all] confirm");
+            return;
+        }
+        AccountManager accounts = plugin.accounts();
+        boolean all = args[1].equalsIgnoreCase("all");
+        Account target = all ? null : accounts.findByName(args[1]);
+        if (!all && target == null) {
+            Text.send(sender, "<red>Unknown player (they must have joined once).");
+            return;
+        }
+        String who = all ? "EVERY player" : Text.escape(target.name());
+        if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+            Text.send(sender, "<red>This resets the money, cogs, recipe unlocks, milestones and island of " + who + ".");
+            sender.sendMessage(Text.mm(" <gray>Run <white>/eco wipe " + Text.escape(args[1]) + " confirm</white> to do it."));
+            return;
+        }
+        List<UUID> players = all ? accounts.all() : List.of(target.uuid());
+        int islands = 0;
+        for (UUID id : players) {
+            if (plugin.wipeProgress(id, sender.getName())) {
+                islands++;
+            }
+        }
+        Text.send(sender, "<green>Wiped " + who + ". <gray>(" + players.size() + " player" + (players.size() == 1 ? "" : "s")
+                + ", " + islands + " island" + (islands == 1 ? "" : "s") + " reset)");
     }
 
     private void history(CommandSender sender, String[] args) {
@@ -134,6 +165,7 @@ public final class EcoCommand implements TabExecutor {
                 "/eco take [player] [amount] [coins|cogs]",
                 "/eco set [player] [amount] [coins|cogs]",
                 "/eco history [player] [page]",
+                "/eco wipe [player|all] confirm <dark_gray>- reset money, cogs, unlocks and island",
                 "/eco rush [item] <dark_gray>- start a market rush now",
                 "/eco reload")) {
             sender.sendMessage(Text.mm(" <white>" + line));
@@ -143,10 +175,18 @@ public final class EcoCommand implements TabExecutor {
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String label, String @NonNull [] args) {
         if (args.length == 1) {
-            return Completions.filter(List.of("give", "take", "set", "history", "reload", "rush"), args[0]);
+            return Completions.filter(List.of("give", "take", "set", "history", "wipe", "reload", "rush"), args[0]);
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("rush")) {
             return Completions.items(args[1]);
+        }
+        if (args[0].equalsIgnoreCase("wipe")) {
+            if (args.length == 2) {
+                List<String> options = new java.util.ArrayList<>(plugin.accounts().names());
+                options.add("all");
+                return Completions.filter(options, args[1]);
+            }
+            return args.length == 3 ? Completions.filter(List.of("confirm"), args[2]) : List.of();
         }
         if (args.length == 2 && !args[0].equalsIgnoreCase("reload")) {
             return Completions.filter(plugin.accounts().names(), args[1]);

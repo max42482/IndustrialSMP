@@ -14,6 +14,8 @@ Jar ends up in `build/libs/`. Vault is optional.
 
 **Islands.** Every player gets a OneBlock island on first join. 10 phases unlock as you break blocks (Plains to The End), and you can switch back to any of them in `/is phases`. After the End you can buy bonus phases with coins or cogs. Friends can join your island with `/is invite`.
 
+The first chest on a new island is a starter kit with water, lava, seeds, sugar cane, cactus, saplings and food. Chests in each phase can also hold extras that fit it (water in Ocean, lava and nether wart in Nether, cocoa in Jungle and so on), and some OneBlock blocks drop bonus items, like seeds from grass. It's all in `phases.yml`.
+
 **Economy.** Coins and cogs, `/pay`, `/baltop`, `/sell`, `/worth` with prices that drop when people sell a lot, buy orders (`/orders`) and an auction house (`/ah`) with normal, falling price and supply contract listings. Anything you're owed goes to `/collect`.
 
 **Machines.** Rotation works like Create: RPM and stress (SU).
@@ -47,6 +49,7 @@ Recipes are locked at first. You earn cogs from milestones and spend them in `/i
 | `/orders`, `/ah`, `/collect` | Trading |
 | `/sidebar` | Toggle the scoreboard |
 | `/eco` | Admin money stuff |
+| `/eco wipe <player\|all> confirm` | Admin: reset money, cogs, unlocks, milestones and island |
 | `/kinetics give\|demo\|at\|place\|fill\|windmill` | Admin machine stuff |
 | `/is admin create\|progress\|info\|tp\|reset` | Admin island stuff |
 
