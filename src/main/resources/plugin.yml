@@ -46,10 +46,18 @@ commands:
   is:
     description: Your OneBlock island.
     aliases: [island, ob, oneblock]
-    usage: /is [home|phases|members|unlocks|invite|accept|kick|leave|visit]
+    usage: /is [home|phases|members|unlocks|invite|accept|kick|leave|visit|reset]
   unlocks:
     description: Unlock machine recipes with cogs.
     usage: /unlocks
+  spawn:
+    description: Go to spawn.
+    aliases: [hub, lobby]
+    usage: /spawn
+  setspawn:
+    description: Set the spawn to where you are standing.
+    permission: oneblockeconomy.island.admin
+    usage: /setspawn
   kinetics:
     description: Kinetic machines admin commands.
     aliases: [kin]

@@ -41,8 +41,11 @@ final class IslandManager {
                 )""");
         db.executeNow("CREATE TABLE IF NOT EXISTS island_members (island_id INTEGER NOT NULL, uuid TEXT NOT NULL, PRIMARY KEY (island_id, uuid))");
         db.executeNow("CREATE TABLE IF NOT EXISTS island_bonus_phases (island_id INTEGER NOT NULL, phase TEXT NOT NULL, PRIMARY KEY (island_id, phase))");
+        if (!db.queryNow("PRAGMA table_info(islands)", rs -> rs.getString(2)).contains("best")) {
+            db.executeNow("ALTER TABLE islands ADD COLUMN best INTEGER NOT NULL DEFAULT 0");
+        }
         nextId = db.maxId("islands") + 1;
-        for (Island i : db.queryNow("SELECT id, owner, grid_x, grid_z, home_x, home_y, home_z, home_yaw, home_pitch, blocks, phase, open, created FROM islands",
+        for (Island i : db.queryNow("SELECT id, owner, grid_x, grid_z, home_x, home_y, home_z, home_yaw, home_pitch, blocks, phase, open, created, best FROM islands",
                 rs -> {
                     Island i = new Island(rs.getLong(1), UUID.fromString(rs.getString(2)), rs.getInt(3), rs.getInt(4), rs.getLong(13));
                     i.homeX = rs.getDouble(5);
@@ -53,6 +56,7 @@ final class IslandManager {
                     i.blocksBroken = rs.getLong(10);
                     i.selectedPhase = rs.getString(11);
                     i.open = rs.getInt(12) != 0;
+                    i.best = Math.max(rs.getLong(14), i.blocksBroken);
                     return i;
                 })) {
             islands.put(i.id, i);
@@ -181,7 +185,7 @@ final class IslandManager {
     }
 
     void save(Island i) {
-        db.execute("UPDATE islands SET owner = ?, home_x = ?, home_y = ?, home_z = ?, home_yaw = ?, home_pitch = ?, blocks = ?, phase = ?, open = ? WHERE id = ?",
-                i.owner.toString(), i.homeX, i.homeY, i.homeZ, i.homeYaw, i.homePitch, i.blocksBroken, i.selectedPhase, i.open ? 1 : 0, i.id);
+        db.execute("UPDATE islands SET owner = ?, home_x = ?, home_y = ?, home_z = ?, home_yaw = ?, home_pitch = ?, blocks = ?, phase = ?, open = ?, best = ? WHERE id = ?",
+                i.owner.toString(), i.homeX, i.homeY, i.homeZ, i.homeYaw, i.homePitch, i.blocksBroken, i.selectedPhase, i.open ? 1 : 0, i.best, i.id);
     }
 }

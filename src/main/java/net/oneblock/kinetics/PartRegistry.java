@@ -110,7 +110,8 @@ final class PartRegistry {
         for (String entry : data.split(";")) {
             KineticPart p = KineticPart.deserialize(chunk.getWorld(), entry);
             Material found = p == null ? null : p.block().getType();
-            boolean oldHost = found == Material.STRUCTURE_VOID || found == Material.BARRIER || p != null && found == p.type.icon
+            boolean oldHost = found == Material.STRUCTURE_VOID || found == Material.BARRIER || found == Material.PETRIFIED_OAK_SLAB
+                    || p != null && found == p.type.icon
                     && (p.type == PartType.GEARBOX || p.type == PartType.CLUTCH || p.type == PartType.GEARSHIFT || p.type == PartType.CREATIVE_MOTOR);
             if (p == null || found != p.type.host && !(oldHost && p.type.hasInvisibleHost())) {
                 changed = true;

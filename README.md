@@ -39,13 +39,16 @@ Recipes are locked at first. You earn cogs from milestones and spend them in `/i
 | `/is` | Island menu |
 | `/is phases`, `/is unlocks` | Phases and recipe unlocks |
 | `/is invite`, `/is accept`, `/is kick`, `/is leave`, `/is visit` | Co-op |
+| `/is reset` | Wipe your island and start over (owner only, 30 min cooldown) |
+| `/spawn` | Go to spawn |
+| `/setspawn` | Admin: set spawn where you stand |
 | `/bal`, `/pay`, `/baltop`, `/cogs` | Money |
 | `/sell`, `/worth`, `/market` | Selling |
 | `/orders`, `/ah`, `/collect` | Trading |
 | `/sidebar` | Toggle the scoreboard |
 | `/eco` | Admin money stuff |
 | `/kinetics give\|demo\|at\|place\|fill\|windmill` | Admin machine stuff |
-| `/is admin create\|progress\|info\|tp` | Admin island stuff |
+| `/is admin create\|progress\|info\|tp\|reset` | Admin island stuff |
 
 ## Config
 

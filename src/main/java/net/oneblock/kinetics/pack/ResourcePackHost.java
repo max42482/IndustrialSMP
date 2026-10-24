@@ -112,7 +112,7 @@ public final class ResourcePackHost implements Listener {
         try (ZipOutputStream out = new ZipOutputStream(bytes)) {
             put(out, "pack.mcmeta", "{\"pack\":{\"description\":\"OneBlock machines\",\"min_format\":" + PACK_FORMAT
                     + ",\"max_format\":" + PACK_FORMAT + "}}");
-            for (String host : new String[]{"petrified_oak_slab", "waxed_oxidized_copper_chain"}) {
+            for (String host : new String[]{"petrified_oak_slab", "waxed_oxidized_copper_chain", "spawner"}) {
                 put(out, "assets/minecraft/blockstates/" + host + ".json",
                         "{\"variants\":{\"\":{\"model\":\"oneblock:block/kinetic_host\"}}}");
             }

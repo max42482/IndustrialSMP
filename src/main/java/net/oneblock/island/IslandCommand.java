@@ -16,7 +16,7 @@ import java.util.Locale;
 
 public final class IslandCommand implements TabExecutor {
     private static final List<String> SUBS = List.of("home", "sethome", "phases", "members", "unlocks", "invite", "accept",
-            "deny", "kick", "leave", "visit", "open", "close", "help");
+            "deny", "kick", "leave", "visit", "open", "close", "reset", "help");
     private final IslandModule module;
 
     IslandCommand(IslandModule module) {
@@ -65,6 +65,7 @@ public final class IslandCommand implements TabExecutor {
                 }
             }
             case "leave" -> module.leave(p);
+            case "reset" -> module.askReset(p, island);
             case "visit" -> {
                 OfflinePlayer target = args.length >= 2 ? Bukkit.getOfflinePlayerIfCached(args[1]) : null;
                 if (target == null) {
@@ -96,7 +97,9 @@ public final class IslandCommand implements TabExecutor {
                 "/is unlocks <dark_gray>- unlock machine recipes with cogs",
                 "/is invite [player] <dark_gray>/ <white>/is accept <dark_gray>/ <white>/is deny",
                 "/is members <dark_gray>/ <white>/is kick [player] <dark_gray>/ <white>/is leave",
-                "/is visit [player] <dark_gray>/ <white>/is open <dark_gray>/ <white>/is close")) {
+                "/is visit [player] <dark_gray>/ <white>/is open <dark_gray>/ <white>/is close",
+                "/is reset <dark_gray>- wipe your island and start over",
+                "/spawn <dark_gray>- go to spawn")) {
             to.sendMessage(Text.mm(" <white>" + line));
         }
     }
@@ -111,6 +114,7 @@ public final class IslandCommand implements TabExecutor {
             sender.sendMessage(Text.mm(" <white>/is admin progress [player] [blocks] <dark_gray>- add OneBlock progress"));
             sender.sendMessage(Text.mm(" <white>/is admin info [player]"));
             sender.sendMessage(Text.mm(" <white>/is admin tp [player] <dark_gray>- go to their island"));
+            sender.sendMessage(Text.mm(" <white>/is admin reset [player] <dark_gray>- wipe their island, no cooldown"));
             return;
         }
         OfflinePlayer target = Bukkit.getOfflinePlayer(args[2]);
@@ -150,6 +154,14 @@ public final class IslandCommand implements TabExecutor {
                     p.teleportAsync(module.islands.home(i));
                 }
             }
+            case "reset" -> {
+                String who = Text.escape(args[2]);
+                if (module.resetNow(i, () -> Text.send(sender, "<green>Island of " + who + " was reset."))) {
+                    Text.send(sender, "<gray>Resetting the island of " + who + "...");
+                } else {
+                    Text.send(sender, "<red>That island is already being reset.");
+                }
+            }
             default -> Text.send(sender, "<red>Unknown admin action.");
         }
     }
@@ -166,7 +178,7 @@ public final class IslandCommand implements TabExecutor {
                 options.add("admin");
             }
         } else if (args.length == 2 && args[0].equalsIgnoreCase("admin")) {
-            options.addAll(List.of("create", "progress", "info", "tp"));
+            options.addAll(List.of("create", "progress", "info", "tp", "reset"));
         } else if (args.length == 2 || args.length == 3 && args[0].equalsIgnoreCase("admin")) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 options.add(p.getName());

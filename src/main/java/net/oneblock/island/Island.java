@@ -17,6 +17,7 @@ public final class Island {
     float homeYaw;
     float homePitch;
     long blocksBroken;
+    long best;
     String selectedPhase;
     final Set<String> bonusPhases = new LinkedHashSet<>();
     boolean open = true;

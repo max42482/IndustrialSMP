@@ -54,6 +54,10 @@ final class KineticsListener implements Listener {
             }
             return;
         }
+        if (part != null && item != null && item.getType().name().endsWith("_SPAWN_EGG")) {
+            event.setCancelled(true);
+            return;
+        }
         if (part != null && part.type.hasInvisibleHost()) {
             if (event.getHand() != EquipmentSlot.HAND) {
                 if (held != null) {
@@ -89,6 +93,7 @@ final class KineticsListener implements Listener {
             return;
         }
         event.setDropItems(false);
+        event.setExpToDrop(0);
         kinetics.breakPart(part, event.getPlayer().getGameMode() != GameMode.CREATIVE);
     }
 
@@ -123,7 +128,7 @@ final class KineticsListener implements Listener {
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
         Material placed = event.getBlockPlaced().getType();
-        boolean host = placed == Material.PETRIFIED_OAK_SLAB || placed == Material.WAXED_OXIDIZED_COPPER_CHAIN;
+        boolean host = placed == Material.PETRIFIED_OAK_SLAB || placed == Material.WAXED_OXIDIZED_COPPER_CHAIN || placed == Material.SPAWNER;
         if (host && kinetics.items.partOf(event.getItemInHand()) == null) {
             event.setCancelled(true);
         }

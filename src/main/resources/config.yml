@@ -35,7 +35,20 @@ island:
   height: 100
   # Members besides the owner.
   max-members: 4
+  # Minutes an island owner has to wait between /is reset. Admins can always use /is admin reset.
+  reset-cooldown-minutes: 30
   first-block: GRASS_BLOCK
+
+# Where /spawn takes players. Leave world empty to use the centre of the island world, or use /setspawn in game.
+spawn:
+  world: ""
+  x: 0.5
+  y: 101
+  z: 0.5
+  yaw: 0
+  pitch: 0
+  # Build a small platform at the spawn the first time if nothing is there.
+  build-platform: true
 
 # Cogs come from milestones and are spent on machine recipes.
 progression:

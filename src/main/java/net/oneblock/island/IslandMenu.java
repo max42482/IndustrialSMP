@@ -54,6 +54,10 @@ final class IslandMenu extends Menu {
                 "<gray>Visitors can look around but", "<gray>can't build or open anything.", "",
                 owner ? "<yellow>Click to " + (island.open ? "close" : "open") : "<dark_gray>Only the owner can change this"));
         inventory.setItem(22, icon(Material.COMPASS, "<white>Set home here", "<gray>Stand on your island and click."));
+        inventory.setItem(18, icon(Material.LODESTONE, "<white>Spawn", "<gray>Go to spawn. Same as <white>/spawn", "", "<yellow>Click"));
+        if (owner) {
+            inventory.setItem(26, icon(Material.TNT, "<red>Reset island", "<gray>Wipe your island and start over.", "", "<yellow>Click"));
+        }
     }
 
     @Override
@@ -76,6 +80,15 @@ final class IslandMenu extends Menu {
             case 22 -> {
                 Text.send(viewer, module.setHome(viewer) ? "<green>Home set." : "<red>Stand on your own island first.");
                 nextTick(viewer::closeInventory);
+            }
+            case 18 -> nextTick(() -> {
+                viewer.closeInventory();
+                module.spawn.teleport(viewer);
+            });
+            case 26 -> {
+                if (island.owner.equals(viewer.getUniqueId())) {
+                    nextTick(() -> module.askReset(viewer, island));
+                }
             }
             default -> {
             }

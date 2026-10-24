@@ -57,8 +57,10 @@ final class OneBlock {
 
     void addProgress(Island i, long amount) {
         long before = i.blocksBroken;
+        long rewarded = Math.max(before, i.best);
         Phase reachedBefore = phases.reached(before);
         i.blocksBroken += amount;
+        i.best = Math.max(i.best, i.blocksBroken);
         Phase reachedNow = phases.reached(i.blocksBroken);
         if (reachedNow != reachedBefore) {
             if (i.selectedPhase == null || i.selectedPhase.equals(reachedBefore.id)) {
@@ -67,15 +69,15 @@ final class OneBlock {
             announce(i, reachedNow);
             if (listener != null) {
                 for (Phase p : phases.natural()) {
-                    if (p.startsAt > before && p.startsAt <= i.blocksBroken) {
+                    if (p.startsAt > rewarded && p.startsAt <= i.blocksBroken) {
                         listener.phaseUnlocked(i, p);
                     }
                 }
             }
         }
         islands.save(i);
-        if (listener != null) {
-            listener.blocksBroken(i, before, i.blocksBroken);
+        if (listener != null && i.blocksBroken > rewarded) {
+            listener.blocksBroken(i, rewarded, i.blocksBroken);
         }
     }
 

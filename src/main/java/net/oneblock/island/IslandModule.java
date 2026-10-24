@@ -3,6 +3,8 @@ package net.oneblock.island;
 import net.oneblock.economy.account.AccountManager;
 import net.oneblock.economy.account.Currency;
 import net.oneblock.economy.db.Database;
+import net.oneblock.economy.gui.ConfirmMenu;
+import net.oneblock.economy.gui.Menu;
 import net.oneblock.economy.util.Text;
 import net.oneblock.progression.MachineUnlocks;
 import org.bukkit.Bukkit;
@@ -13,6 +15,7 @@ import org.bukkit.WorldBorder;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -31,6 +34,8 @@ public final class IslandModule {
     final IslandManager islands;
     final PhaseRegistry phases = new PhaseRegistry();
     final OneBlock oneBlock;
+    final Spawn spawn = new Spawn(this);
+    final IslandReset reset = new IslandReset(this);
     private final Map<UUID, Invite> invites = new HashMap<>();
     int maxMembers = 4;
     private Material firstBlock = Material.GRASS_BLOCK;
@@ -50,12 +55,25 @@ public final class IslandModule {
         oneBlock.listener = listener;
     }
 
+    public void setAreaClearer(IslandAreaClearer clearer) {
+        reset.clearer = clearer;
+    }
+
+    public void configureSpawn(ConfigurationSection c) {
+        spawn.configure(c);
+    }
+
+    public SpawnCommand spawnCommand() {
+        return new SpawnCommand(this);
+    }
+
     public void configure(ConfigurationSection c) {
         if (c != null) {
             islands.spacing = Math.max(200, c.getInt("spacing", 1000));
             islands.height = c.getInt("height", 100);
             islands.borderSize = Math.max(16, c.getInt("border-size", 150));
             maxMembers = Math.max(0, c.getInt("max-members", 4));
+            reset.cooldownMs = Math.max(0, c.getLong("reset-cooldown-minutes", 30)) * 60_000L;
             Material m = Material.matchMaterial(c.getString("first-block", "GRASS_BLOCK"));
             firstBlock = m == null || !m.isBlock() ? Material.GRASS_BLOCK : m;
         }
@@ -71,9 +89,11 @@ public final class IslandModule {
 
     public void enable() {
         Bukkit.getPluginManager().registerEvents(new IslandListener(this), plugin);
+        spawn.buildIfMissing();
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Island i : islands.all()) {
-                if (i.owner.equals(ABANDONED) || !islands.world.isChunkLoaded(islands.centerX(i) >> 4, islands.centerZ(i) >> 4)) {
+                if (i.owner.equals(ABANDONED) || reset.running(i)
+                        || !islands.world.isChunkLoaded(islands.centerX(i) >> 4, islands.centerZ(i) >> 4)) {
                     continue;
                 }
                 oneBlock.regenerate(i, false);
@@ -105,7 +125,7 @@ public final class IslandModule {
         return accounts.nameOf(player);
     }
 
-    private Material startBlock() {
+    Material startBlock() {
         Phase first = phases.first();
         Material m = first == null ? null : first.sequenced(0);
         return m == null || m == Material.CHEST ? firstBlock : m;
@@ -123,6 +143,10 @@ public final class IslandModule {
 
     void teleportHome(Player p) {
         Island i = ensureIsland(p);
+        if (reset.running(i)) {
+            Text.send(p, "<gray>Your island is being reset. Try again in a few seconds.");
+            return;
+        }
         Location home = islands.home(i);
         home.getChunk().load();
         oneBlock.regenerate(i, false);
@@ -135,6 +159,14 @@ public final class IslandModule {
             return;
         }
         Island i = islands.at(at);
+        if (i == null && spawn.isSpawnCell(at)) {
+            WorldBorder border = Bukkit.createWorldBorder();
+            Location s = spawn.location();
+            border.setCenter(s.getX(), s.getZ());
+            border.setSize(islands.borderSize);
+            p.setWorldBorder(border);
+            return;
+        }
         if (i == null) {
             i = islands.of(p.getUniqueId());
         }
@@ -310,6 +342,32 @@ public final class IslandModule {
             }
         }
         return Buy.OK;
+    }
+
+    void askReset(Player p, Island i) {
+        if (!i.owner.equals(p.getUniqueId())) {
+            Text.send(p, "<red>Only the owner can reset the island.");
+            return;
+        }
+        if (reset.running(i)) {
+            Text.send(p, "<gray>Your island is already being reset.");
+            return;
+        }
+        long left = reset.cooldownLeft(i);
+        if (left > 0 && !p.hasPermission("oneblockeconomy.island.admin")) {
+            Text.send(p, "<red>You can reset your island again in " + Text.duration(left) + ".");
+            return;
+        }
+        ItemStack preview = Menu.icon(Material.TNT, "<red><bold>Reset your island",
+                "<gray>Deletes every block, machine and item", "<gray>on your island and starts the OneBlock",
+                "<gray>over from 0 in the first phase.", "",
+                "<gray>Your inventory, money, cogs, unlocks", "<gray>and bought bonus phases stay.",
+                "<dark_gray>Milestone cogs only pay out once.");
+        new ConfirmMenu(p, "<dark_red>Reset your island?", preview, () -> reset.start(i, null), null).open();
+    }
+
+    boolean resetNow(Island i, Runnable done) {
+        return reset.start(i, done);
     }
 
     void addProgress(Island i, long amount) {

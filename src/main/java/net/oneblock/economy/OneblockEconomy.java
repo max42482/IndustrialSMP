@@ -77,6 +77,7 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
             milestones = new Milestones(db, accounts, kinetics.items());
             islands = new IslandModule(this, db, accounts, unlocks);
             islands.setProgressListener(milestones);
+            islands.setAreaClearer(kinetics::clearArea);
             applyConfig();
         } catch (SQLException e) {
             getLogger().log(Level.SEVERE, "Could not open the economy database - disabling.", e);
@@ -112,6 +113,8 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
         IslandCommand islandCommand = islands.command();
         register("is", islandCommand);
         register("unlocks", islandCommand);
+        register("spawn", islands.spawnCommand());
+        register("setspawn", islands.spawnCommand());
         register("orders", new OrdersCommand(orders, accounts));
         register("ah", new AuctionCommand(auctions, accounts, collection, contractLinks));
 
@@ -163,6 +166,7 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
         unlocks.load(getConfig().getConfigurationSection("progression.unlock-costs"));
         milestones.load(getConfig().getConfigurationSection("progression"));
         islands.configure(getConfig().getConfigurationSection("island"));
+        islands.configureSpawn(getConfig().getConfigurationSection("spawn"));
     }
 
     private void register(String name, TabExecutor executor) {

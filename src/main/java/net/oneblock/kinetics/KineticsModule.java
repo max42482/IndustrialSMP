@@ -461,6 +461,31 @@ public final class KineticsModule {
         }
     }
 
+    public void clearArea(World world, int minX, int minZ, int maxX, int maxZ) {
+        Set<Chunk> chunks = new HashSet<>();
+        for (KineticPart p : new ArrayList<>(registry.all())) {
+            if (p.world != world || p.x < minX || p.x > maxX || p.z < minZ || p.z > maxZ) {
+                continue;
+            }
+            if (p.type == PartType.CONNECTOR) {
+                energy.removeWires(p, false);
+            }
+            unloadExtras(p);
+            if (p.visual != null) {
+                p.visual.remove();
+            }
+            registry.remove(p);
+            dirty.remove(p);
+            activeCranks.remove(p);
+            chunks.add(world.getChunkAt(p.x >> 4, p.z >> 4));
+        }
+        for (Chunk c : chunks) {
+            registry.save(world, c.getX(), c.getZ());
+        }
+        tanks.invalidate();
+        energy.markDirty();
+    }
+
     void removePart(KineticPart part) {
         List<KineticPart> neighbors = new ArrayList<>();
         for (NetworkSolver.Edge e : solver.edges(part)) {
