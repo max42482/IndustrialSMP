@@ -1,0 +1,84 @@
+# Base sell price (in coins) for one item. Only plain items (no custom name, lore or enchants) can be sold.
+# The real price moves with supply and demand - see the market section in config.yml.
+# Items not listed here cannot be sold with /sell (they can still be traded with /ah and /orders).
+
+# OneBlock basics
+COBBLESTONE: 0.5
+STONE: 0.8
+DIRT: 0.3
+GRASS_BLOCK: 0.6
+GRAVEL: 0.5
+SAND: 0.5
+RED_SAND: 0.7
+CLAY_BALL: 0.8
+FLINT: 1.0
+DEEPSLATE: 0.8
+COBBLED_DEEPSLATE: 0.6
+ANDESITE: 0.6
+DIORITE: 0.6
+GRANITE: 0.6
+TUFF: 0.6
+CALCITE: 1.0
+NETHERRACK: 0.4
+END_STONE: 1.2
+OBSIDIAN: 8.0
+
+# Wood
+OAK_LOG: 2.0
+SPRUCE_LOG: 2.0
+BIRCH_LOG: 2.0
+JUNGLE_LOG: 2.0
+ACACIA_LOG: 2.0
+DARK_OAK_LOG: 2.0
+MANGROVE_LOG: 2.0
+CHERRY_LOG: 2.2
+PALE_OAK_LOG: 2.4
+CRIMSON_STEM: 2.4
+WARPED_STEM: 2.4
+STICK: 0.2
+
+# Ores and minerals
+COAL: 3.0
+RAW_COPPER: 4.0
+COPPER_INGOT: 5.0
+RAW_IRON: 7.0
+IRON_INGOT: 9.0
+RAW_GOLD: 11.0
+GOLD_INGOT: 14.0
+REDSTONE: 3.0
+LAPIS_LAZULI: 4.0
+QUARTZ: 4.0
+AMETHYST_SHARD: 6.0
+DIAMOND: 60.0
+EMERALD: 45.0
+NETHERITE_SCRAP: 250.0
+
+# Farming
+WHEAT: 1.0
+CARROT: 1.0
+POTATO: 1.0
+BEETROOT: 1.0
+SUGAR_CANE: 1.2
+PUMPKIN: 2.0
+MELON_SLICE: 0.4
+CACTUS: 1.0
+BAMBOO: 0.3
+KELP: 0.3
+COCOA_BEANS: 1.5
+NETHER_WART: 2.0
+APPLE: 2.0
+EGG: 1.0
+
+# Mob drops
+ROTTEN_FLESH: 0.5
+BONE: 1.5
+STRING: 1.5
+SPIDER_EYE: 2.0
+GUNPOWDER: 3.0
+ARROW: 0.5
+LEATHER: 3.0
+FEATHER: 1.0
+SLIME_BALL: 5.0
+ENDER_PEARL: 12.0
+BLAZE_ROD: 15.0
+GHAST_TEAR: 25.0

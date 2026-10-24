@@ -1,0 +1,82 @@
+name: OneblockEconomy
+version: '${version}'
+main: net.oneblock.economy.OneblockEconomy
+api-version: '26.2'
+description: Economy for the OneBlock industry server - coins, cogs, dynamic market, orders and auction house.
+softdepend: [Vault]
+libraries:
+  - org.xerial:sqlite-jdbc:3.53.4.0
+
+commands:
+  balance:
+    description: Show your balance or another player's.
+    aliases: [bal, money]
+    usage: /balance [player]
+  cogs:
+    description: Show your cogs or another player's.
+    usage: /cogs [player]
+  pay:
+    description: Send coins to another player.
+    usage: /pay <player> <amount>
+  baltop:
+    description: Richest players.
+    aliases: [balancetop]
+    usage: /baltop [page]
+  eco:
+    description: Economy admin commands.
+    permission: oneblockeconomy.admin
+    usage: /eco <give|take|set|history|reload> ...
+  worth:
+    description: Show the market price of an item.
+    usage: /worth [hand|item]
+  sell:
+    description: Sell items to the market.
+    usage: /sell [hand|all]
+  market:
+    description: Browse market prices and the active market event.
+    usage: /market
+  orders:
+    description: Buy orders - ask the server for items at your price.
+    aliases: [order]
+    usage: /orders [create|mine] ...
+  ah:
+    description: Auction house.
+    aliases: [auction, auctionhouse]
+    usage: /ah [sell|falling|contract|mine] ...
+  is:
+    description: Your OneBlock island.
+    aliases: [island, ob, oneblock]
+    usage: /is [home|phases|members|unlocks|invite|accept|kick|leave|visit]
+  unlocks:
+    description: Unlock machine recipes with cogs.
+    usage: /unlocks
+  kinetics:
+    description: Kinetic machines admin commands.
+    aliases: [kin]
+    permission: oneblockeconomy.kinetics.admin
+    usage: /kinetics <give|info>
+  sidebar:
+    description: Show or hide the sidebar.
+    aliases: [sb, scoreboard]
+    usage: /sidebar
+  collect:
+    description: Pick up items waiting for you (purchases, order deliveries, returned listings).
+    aliases: [mailbox]
+    usage: /collect
+
+permissions:
+  oneblockeconomy.admin:
+    description: Access to /eco.
+    default: op
+  oneblockeconomy.island.admin:
+    description: /is admin (create islands, add progress, teleport).
+    default: op
+  oneblockeconomy.island.bypass:
+    description: Build on any island.
+    default: op
+  oneblockeconomy.kinetics.admin:
+    description: Access to /kinetics (giving parts).
+    default: op
+  oneblockeconomy.balance.others:
+    description: See other players' balances.
+    default: true

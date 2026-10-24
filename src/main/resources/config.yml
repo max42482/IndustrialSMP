@@ -1,0 +1,191 @@
+# OneblockEconomy configuration
+
+prefix: "<dark_gray>[<gold>Economy</gold>]</dark_gray> "
+
+currency:
+  # Coins: everyday money. Cogs: rare currency earned from industry milestones.
+  coins-symbol: "⛁"
+  cogs-symbol: "⚙"
+  starting-coins: 100.0
+  starting-cogs: 0
+
+pay:
+  minimum: 0.01
+
+# The scoreboard on the right of the screen. Players can hide it with /sidebar.
+sidebar:
+  enabled: true
+  update-ticks: 20
+  title: "<gradient:#ffcc33:#ff7a00><bold>ONEBLOCK</bold></gradient>"
+  # Up to 15 lines, MiniMessage colors. Placeholders:
+  # {player} {money} {money_full} {cogs} {rush} {collect} {orders} {listings}
+  # {online} {max_players} {ping} {playtime}
+  lines:
+    - "<green>⛁ <white>Money <green>{money}"
+    - "<aqua>⚙ <white>Cogs <aqua>{cogs}"
+    - "<red>⌛ <white>Playtime <red>{playtime}"
+
+# OneBlock islands. Phases (blocks, mobs, chests, bonus phase prices) are in phases.yml.
+island:
+  world: oneblock_world
+  # Distance between island centres, and the size of each island's border.
+  spacing: 1000
+  border-size: 150
+  # Height of the OneBlock.
+  height: 100
+  # Members besides the owner.
+  max-members: 4
+  first-block: GRASS_BLOCK
+
+# Cogs come from milestones and are spent on machine recipes.
+progression:
+  # Island total blocks broken -> cogs for everyone on the island.
+  block-milestones:
+    50: 2
+    200: 2
+    500: 3
+    1000: 3
+    2500: 5
+    5000: 5
+    10000: 8
+    25000: 10
+    50000: 15
+    100000: 25
+  # Cogs for everyone on the island when a natural phase unlocks.
+  phase-unlock-cogs: 2
+  # Cogs for a player's first time placing one of these.
+  first-part-cogs:
+    water_wheel: 2
+    mechanical_drill: 3
+    large_cogwheel: 1
+    gearbox: 1
+    millstone: 2
+    mechanical_press: 2
+    windmill_bearing: 2
+    crushing_wheel: 3
+  # Cogs to unlock each recipe (0 = free starter recipe).
+  unlock-costs:
+    andesite_alloy: 0
+    shaft: 0
+    hand_crank: 0
+    cogwheel: 1
+    large_cogwheel: 2
+    gearbox: 2
+    clutch: 2
+    gearshift: 2
+    water_wheel: 3
+    mechanical_drill: 5
+    goggles: 1
+    belt_connector: 2
+    depot: 1
+    funnel: 1
+    millstone: 3
+    mechanical_press: 4
+    encased_fan: 4
+    crushing_wheel: 6
+    speedometer: 1
+    stressometer: 2
+    windmill_bearing: 3
+
+# Create-style rotation. Speeds are in RPM, stress in SU (stress units), like Create.
+kinetics:
+  max-speed: 256
+  hand-crank:
+    speed: 32
+    # Capacity = capacity-per-rpm x speed, so a hand crank gives 8 x 32 = 256 SU.
+    capacity-per-rpm: 8
+  creative-motor:
+    capacity-per-rpm: 16384
+    # RPM added or removed per click.
+    step: 16
+  water-wheel:
+    speed: 8
+    # 32 x 8 RPM = 256 SU, like Create.
+    capacity-per-rpm: 32
+  windmill:
+    # Sails (wool blocks) per RPM: 32 sails = 8 RPM. Capacity = capacity-per-rpm x speed.
+    sails-per-rpm: 4
+    max-speed: 16
+    capacity-per-rpm: 64
+  belt:
+    # Items move RPM / this many blocks per tick: 32 RPM = 1.25 blocks/second, 256 RPM = 10.
+    rpm-per-block-per-tick: 512
+    max-length: 20
+  # Job times in ticks at 32 RPM (twice as fast at 64 RPM, and so on).
+  processing:
+    millstone-ticks: 100
+    # Per item.
+    crushing-ticks: 60
+    press-ticks: 40
+    # Fans don't speed up - their range grows with speed instead (RPM / 8 blocks).
+    fan-ticks: 100
+    fan-max-range: 16
+  # Hits needed to break a thin part (shaft, cog...) in survival; fewer with an axe or pickaxe.
+  break-hits: 3
+  break-hits-with-tool: 2
+  # Stress a part uses per RPM it turns at. Shafts and gears are free, like in Create.
+  # A drill at 8 RPM uses 4 x 8 = 32 SU, so one water wheel runs 8 drills - or fewer, faster ones.
+  stress-impact:
+    shaft: 0
+    cogwheel: 0
+    large_cogwheel: 0
+    gearbox: 0
+    clutch: 0
+    gearshift: 0
+    mechanical_drill: 4
+    millstone: 4
+    mechanical_press: 8
+    encased_fan: 2
+    crushing_wheel: 8
+
+# The machines' 3D models. The plugin builds the pack and can serve it itself.
+resource-pack:
+  enabled: true
+  # Serve resourcepack.zip from this server on the port below.
+  self-host: true
+  port: 8163
+  # The address players download it from. localhost only works on your own PC - on a real server use
+  # http://<your server's public IP>:8163/pack.zip (and open that port), or upload resourcepack.zip
+  # somewhere, put its link here and set self-host: false.
+  url: "http://localhost:8163/pack.zip"
+  # true = players who decline the pack are kicked (machines look broken without it).
+  required: false
+
+market:
+  # Price = base * 1 / (1 + recent_sales / elasticity), never below base * min-factor.
+  # With elasticity 2000, selling 2000 units of an item halves its price.
+  elasticity: 2000
+  min-factor: 0.2
+  # How fast prices recover: recent sales halve every N minutes.
+  recovery-half-life-minutes: 90
+  # A price snapshot is stored every N minutes (24 snapshots are kept for the /worth graph).
+  history-sample-minutes: 60
+  events:
+    enabled: true
+    # Minutes between the start of one event and the next.
+    interval-minutes: 45
+    duration-minutes: 30
+    multiplier: 2.0
+    # Events only start when at least this many players are online.
+    min-players: 1
+
+orders:
+  max-per-player: 10
+  # Percentage taken from the seller's payout when they fill an order.
+  tax-percent: 0.0
+
+auction:
+  max-listings-per-player: 10
+  listing-hours: 48
+  tax-percent: 0.0
+  falling:
+    default-hours: 6
+    # The price drops in steps; one step every N minutes.
+    step-minutes: 5
+  contract:
+    # Deliveries that can fail (empty chest) before the contract is cancelled.
+    max-misses: 3
+    min-interval-minutes: 10
+    max-deliveries: 168
+    # Seconds the player has to click the source chest after /ah contract.
+    link-timeout-seconds: 30

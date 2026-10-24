@@ -1,0 +1,166 @@
+# OneBlock phases.
+#
+# natural: unlock in order as the island breaks blocks. starts-at = total blocks broken when it unlocks.
+#          When a new phase unlocks the OneBlock switches to it; players can switch back to any unlocked
+#          phase in /is phases (e.g. to farm ores in Underground).
+# bonus:   bought in /is phases with coins OR cogs, once the "requires" phase is unlocked.
+#
+# blocks / mobs: name: weight (weight 20 is twice as likely as weight 10).
+# mob-chance / chest-chance: chance per block broken (0.03 = 3%).
+# loot-table: vanilla loot table used for chests (see the Minecraft wiki "Loot table" page).
+# sequence: (natural phases) fixed blocks at the start of the phase, in order, before random ones.
+#           CHEST in the list = a loot chest. Plains' first entry is a new island's first block.
+#
+# Avoid blocks that break the OneBlock by themselves: leaves (decay), ice (melts), flowers/cactus/sugar cane
+# (need support). Falling blocks like sand are fine - the OneBlock never falls.
+
+natural:
+  plains:
+    name: "<green>Plains"
+    icon: GRASS_BLOCK
+    starts-at: 0
+    # Wood first (enough for a crafting table and wooden tools), then the first stone.
+    sequence: [GRASS_BLOCK, DIRT, OAK_LOG, GRASS_BLOCK, OAK_LOG, OAK_LOG, DIRT, OAK_LOG, GRASS_BLOCK, OAK_LOG,
+               CHEST, OAK_LOG, DIRT, BIRCH_LOG, OAK_LOG, GRASS_BLOCK, OAK_LOG, CLAY, OAK_LOG, PUMPKIN,
+               DIRT, OAK_LOG, MELON, OAK_LOG, GRASS_BLOCK, OAK_LOG, HAY_BLOCK, OAK_LOG, DIRT, COBBLESTONE,
+               OAK_LOG, COBBLESTONE, GRASS_BLOCK, COBBLESTONE, OAK_LOG, COAL_ORE, COBBLESTONE, CHEST, OAK_LOG, STONE]
+    blocks: {GRASS_BLOCK: 40, DIRT: 20, OAK_LOG: 15, BIRCH_LOG: 5, STONE: 10, COBBLESTONE: 6, COAL_ORE: 4,
+             GRAVEL: 3, CLAY: 2, PUMPKIN: 1, MELON: 1, HAY_BLOCK: 1}
+    mobs: {COW: 3, SHEEP: 3, PIG: 3, CHICKEN: 3}
+    mob-chance: 0.03
+    chest-chance: 0.012
+    loot-table: chests/village/village_plains_house
+  underground:
+    name: "<gray>Underground"
+    icon: STONE
+    starts-at: 600
+    sequence: [STONE, COBBLESTONE, COAL_ORE, STONE, IRON_ORE, COBBLESTONE, COPPER_ORE, STONE, IRON_ORE, CHEST]
+    blocks: {STONE: 30, COBBLESTONE: 10, ANDESITE: 10, DIORITE: 5, GRANITE: 5, TUFF: 4, GRAVEL: 5, COAL_ORE: 10,
+             IRON_ORE: 8, COPPER_ORE: 7, LAPIS_ORE: 2, REDSTONE_ORE: 2, GOLD_ORE: 2, DIAMOND_ORE: 0.4}
+    mobs: {ZOMBIE: 3, SKELETON: 3, SPIDER: 2, BAT: 1}
+    mob-chance: 0.025
+    chest-chance: 0.012
+    loot-table: chests/abandoned_mineshaft
+  winter:
+    name: "<aqua>Winter"
+    icon: SNOW_BLOCK
+    starts-at: 1400
+    sequence: [SNOW_BLOCK, SPRUCE_LOG, SNOW_BLOCK, PACKED_ICE, SPRUCE_LOG, CHEST]
+    blocks: {SNOW_BLOCK: 30, PACKED_ICE: 12, BLUE_ICE: 2, SPRUCE_LOG: 18, STONE: 10, COBBLESTONE: 6,
+             IRON_ORE: 5, COAL_ORE: 5, EMERALD_ORE: 0.5, CALCITE: 3}
+    mobs: {POLAR_BEAR: 1, STRAY: 2, FOX: 2, RABBIT: 2, GOAT: 1}
+    mob-chance: 0.025
+    chest-chance: 0.012
+    loot-table: chests/igloo_chest
+  ocean:
+    name: "<blue>Ocean"
+    icon: PRISMARINE
+    starts-at: 2200
+    blocks: {SAND: 20, GRAVEL: 10, CLAY: 10, PRISMARINE: 10, PRISMARINE_BRICKS: 6, DARK_PRISMARINE: 3, SEA_LANTERN: 3,
+             DEAD_TUBE_CORAL_BLOCK: 3, DEAD_BRAIN_CORAL_BLOCK: 3, DEAD_FIRE_CORAL_BLOCK: 3, SPONGE: 0.5,
+             DRIED_KELP_BLOCK: 4}
+    mobs: {DROWNED: 3, TURTLE: 1}
+    mob-chance: 0.02
+    chest-chance: 0.015
+    loot-table: chests/shipwreck_supply
+  jungle:
+    name: "<dark_green>Jungle"
+    icon: JUNGLE_LOG
+    starts-at: 3200
+    blocks: {JUNGLE_LOG: 25, MOSS_BLOCK: 10, MOSSY_COBBLESTONE: 10, PODZOL: 10, MUD: 8, MELON: 6, BAMBOO_BLOCK: 6,
+             STONE: 8, COAL_ORE: 4, GOLD_ORE: 2}
+    mobs: {OCELOT: 1, PARROT: 2, PANDA: 1, FROG: 1}
+    mob-chance: 0.025
+    chest-chance: 0.012
+    loot-table: chests/jungle_temple
+  red_desert:
+    name: "<gold>Red Desert"
+    icon: RED_SAND
+    starts-at: 4200
+    blocks: {RED_SAND: 20, TERRACOTTA: 15, ORANGE_TERRACOTTA: 6, YELLOW_TERRACOTTA: 5, RED_TERRACOTTA: 5,
+             WHITE_TERRACOTTA: 4, RED_SANDSTONE: 10, SAND: 10, SANDSTONE: 8, GOLD_ORE: 4, IRON_ORE: 3}
+    mobs: {HUSK: 3, RABBIT: 1, CAMEL: 1, ARMADILLO: 1}
+    mob-chance: 0.025
+    chest-chance: 0.012
+    loot-table: chests/desert_pyramid
+  nether:
+    name: "<red>Nether"
+    icon: NETHERRACK
+    starts-at: 5200
+    sequence: [NETHERRACK, NETHERRACK, NETHER_QUARTZ_ORE, SOUL_SAND, NETHERRACK, GLOWSTONE, CHEST]
+    blocks: {NETHERRACK: 30, SOUL_SAND: 8, SOUL_SOIL: 6, NETHER_QUARTZ_ORE: 8, NETHER_GOLD_ORE: 6, MAGMA_BLOCK: 5,
+             GLOWSTONE: 4, BLACKSTONE: 6, BASALT: 5, CRIMSON_STEM: 4, WARPED_STEM: 4, NETHER_WART_BLOCK: 3,
+             SHROOMLIGHT: 2, GILDED_BLACKSTONE: 1, ANCIENT_DEBRIS: 0.3}
+    mobs: {ZOMBIFIED_PIGLIN: 3, BLAZE: 2, MAGMA_CUBE: 2, WITHER_SKELETON: 1, STRIDER: 1}
+    mob-chance: 0.025
+    chest-chance: 0.012
+    loot-table: chests/nether_bridge
+  idyll:
+    name: "<light_purple>Idyll"
+    icon: PINK_WOOL
+    starts-at: 6400
+    blocks: {GRASS_BLOCK: 15, WHITE_WOOL: 6, PINK_WOOL: 3, YELLOW_WOOL: 3, LIGHT_BLUE_WOOL: 3, GLASS: 6,
+             BOOKSHELF: 5, OAK_PLANKS: 8, HAY_BLOCK: 6, HONEYCOMB_BLOCK: 3, HONEY_BLOCK: 2, MOSS_BLOCK: 6,
+             CHERRY_LOG: 10, AMETHYST_BLOCK: 1}
+    mobs: {BEE: 2, FOX: 1, RABBIT: 2, SHEEP: 2, CAT: 1}
+    mob-chance: 0.03
+    chest-chance: 0.015
+    loot-table: chests/village/village_taiga_house
+  deep_dark:
+    name: "<dark_aqua>Deep Dark"
+    icon: SCULK
+    starts-at: 7600
+    blocks: {DEEPSLATE: 25, COBBLED_DEEPSLATE: 10, SCULK: 15, SCULK_CATALYST: 1, SMOOTH_BASALT: 4, CALCITE: 4,
+             DEEPSLATE_IRON_ORE: 5, DEEPSLATE_GOLD_ORE: 3, DEEPSLATE_REDSTONE_ORE: 4, DEEPSLATE_LAPIS_ORE: 3,
+             DEEPSLATE_DIAMOND_ORE: 1, DEEPSLATE_EMERALD_ORE: 0.5, AMETHYST_BLOCK: 3}
+    mobs: {}
+    mob-chance: 0
+    chest-chance: 0.015
+    loot-table: chests/ancient_city
+  end:
+    name: "<dark_purple>The End"
+    icon: END_STONE
+    starts-at: 9100
+    sequence: [END_STONE, END_STONE, OBSIDIAN, END_STONE, CHEST]
+    blocks: {END_STONE: 40, END_STONE_BRICKS: 10, PURPUR_BLOCK: 10, PURPUR_PILLAR: 4, OBSIDIAN: 5, CRYING_OBSIDIAN: 1}
+    mobs: {ENDERMAN: 3, ENDERMITE: 1, SHULKER: 1}
+    mob-chance: 0.02
+    chest-chance: 0.01
+    loot-table: chests/end_city_treasure
+
+bonus:
+  mushroom_isle:
+    name: "<#c97a5b>Mushroom Isle"
+    icon: RED_MUSHROOM_BLOCK
+    requires: end
+    price-coins: 100000
+    price-cogs: 10
+    blocks: {MYCELIUM: 30, RED_MUSHROOM_BLOCK: 15, BROWN_MUSHROOM_BLOCK: 15, MUSHROOM_STEM: 10, DIRT: 10, STONE: 8}
+    mobs: {MOOSHROOM: 1}
+    mob-chance: 0.03
+    chest-chance: 0.012
+    loot-table: chests/village/village_plains_house
+  scrapyard:
+    name: "<#b0b7bd>Scrapyard"
+    icon: RAW_IRON_BLOCK
+    requires: end
+    price-coins: 250000
+    price-cogs: 25
+    blocks: {ANDESITE: 20, STONE: 15, COBBLESTONE: 10, IRON_ORE: 15, COPPER_ORE: 18, RAW_IRON_BLOCK: 2, RAW_COPPER_BLOCK: 2,
+             EXPOSED_COPPER: 3, WEATHERED_COPPER: 2, OXIDIZED_COPPER: 1, COAL_BLOCK: 1, REDSTONE_ORE: 4, IRON_BLOCK: 0.3}
+    mobs: {ZOMBIE: 2, SKELETON: 1}
+    mob-chance: 0.015
+    chest-chance: 0.015
+    loot-table: chests/village/village_toolsmith
+  crystal_caves:
+    name: "<#d58cff>Crystal Caves"
+    icon: AMETHYST_BLOCK
+    requires: end
+    price-coins: 500000
+    price-cogs: 50
+    blocks: {AMETHYST_BLOCK: 15, CALCITE: 15, SMOOTH_BASALT: 10, DEEPSLATE: 20, DIAMOND_ORE: 2, DEEPSLATE_DIAMOND_ORE: 2,
+             EMERALD_ORE: 3, LAPIS_ORE: 6, DEEPSLATE_LAPIS_ORE: 4, QUARTZ_BLOCK: 3}
+    mobs: {}
+    mob-chance: 0
+    chest-chance: 0.02
+    loot-table: chests/buried_treasure
