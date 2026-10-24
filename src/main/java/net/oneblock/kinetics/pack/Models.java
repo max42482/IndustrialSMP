@@ -76,9 +76,9 @@ public final class Models {
 
     private static void phase4(Map<String, Model> m) {
         List<Box> belt = List.of(
-                box(1, 8, 0, 15, 12, 16, KELP),
-                box(0, 5, 0, 1, 12, 16, METAL),
-                box(15, 5, 0, 16, 12, 16, METAL));
+                box(1, 5, 0, 15, 8, 16, KELP),
+                box(0, 2, 0, 1, 8, 16, METAL),
+                box(15, 2, 0, 16, 8, 16, METAL));
         m.put("belt", new Model(belt, 16));
         m.put("belt_connector", new Model(disc(12, 3, 13, KELP_SIDE, EIGHT), 14));
 
@@ -99,7 +99,7 @@ public final class Models {
         List<Box> millBase = List.of(
                 box(0, 0, 0, 16, 16, 2, METAL),
                 box(1, 1, 2, 15, 15, 9, WOOD));
-        List<Box> millTop = disc(14, 9, 14, STONE, SIXTEEN);
+        List<Box> millTop = disc(11, 9, 14, STONE, SIXTEEN);
         m.put("millstone_base", new Model(millBase, 16));
         m.put("millstone_top", new Model(millTop, 16));
         m.put("millstone_item", new Model(yUp(join(millBase, millTop)), 16));
@@ -145,7 +145,7 @@ public final class Models {
         m.put("stressometer", new Model(gaugeItem, 16));
 
         List<Box> bearingBase = List.of(box(0, 0, 0, 16, 16, 10, WOOD), box(0, 0, 10, 16, 16, 12, METAL));
-        List<Box> bearingPlate = new ArrayList<>(disc(14, 12, 16, PLANKS, EIGHT));
+        List<Box> bearingPlate = new ArrayList<>(disc(11, 12, 16, PLANKS, EIGHT));
         m.put("bearing_base", new Model(bearingBase, 16));
         m.put("bearing_plate", new Model(bearingPlate, 16));
         m.put("windmill_bearing", new Model(join(bearingBase, bearingPlate), 16));

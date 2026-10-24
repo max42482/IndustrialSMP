@@ -27,7 +27,7 @@ import java.util.UUID;
 
 final class Belts {
     private static final double GAP = 0.3;
-    private static final double TOP = 0.8;
+    private static final double TOP = 0.5;
 
     static final class BeltItem {
         ItemStack stack;
@@ -206,7 +206,7 @@ final class Belts {
     }
 
     private void absorb(KineticPart belt, Segment s) {
-        BoundingBox box = new BoundingBox(belt.x, belt.y + 0.5, belt.z, belt.x + 1, belt.y + 1.4, belt.z + 1);
+        BoundingBox box = new BoundingBox(belt.x, belt.y + 0.3, belt.z, belt.x + 1, belt.y + 1.2, belt.z + 1);
         boolean changed = false;
         for (var e : belt.world.getNearbyEntities(box, e -> e instanceof Item)) {
             Item item = (Item) e;

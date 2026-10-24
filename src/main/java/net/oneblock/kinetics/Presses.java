@@ -11,7 +11,7 @@ import org.joml.Vector3f;
 import java.util.List;
 
 final class Presses {
-    private static final float STROKE = 1.15f;
+    private static final float STROKE = 1.45f;
     private final KineticsModule kinetics;
 
     private static final class Job {

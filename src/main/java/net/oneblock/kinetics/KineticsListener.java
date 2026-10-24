@@ -1,10 +1,6 @@
 package net.oneblock.kinetics;
 
 import io.papermc.paper.event.player.PlayerPickBlockEvent;
-import io.papermc.paper.event.player.PlayerPickEntityEvent;
-import io.papermc.paper.event.player.PrePlayerAttackEntityEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -16,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
-import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
@@ -49,8 +44,10 @@ final class KineticsListener implements Listener {
         }
         Player player = event.getPlayer();
         KineticPart part = kinetics.partAt(block);
+        ItemStack item = event.getItem();
+        PartType held = kinetics.items.partOf(item);
 
-        if (part != null && part.type == PartType.CREATIVE_MOTOR && kinetics.items.partOf(event.getItem()) == null) {
+        if (part != null && part.type == PartType.CREATIVE_MOTOR && held == null) {
             event.setCancelled(true);
             if (event.getHand() == EquipmentSlot.HAND && event.useInteractedBlock() != Event.Result.DENY) {
                 kinetics.adjustMotor(part, player);
@@ -58,85 +55,28 @@ final class KineticsListener implements Listener {
             return;
         }
         if (part != null && part.type.hasInvisibleHost()) {
-            event.setCancelled(true);
-            if (event.useInteractedBlock() != Event.Result.DENY
-                    && (event.getHand() == EquipmentSlot.HAND || player.getInventory().getItemInMainHand().isEmpty())) {
-                kinetics.use(player, part, event.getBlockFace(), event.getHand(), event.getItem());
+            if (event.getHand() != EquipmentSlot.HAND) {
+                if (held != null) {
+                    event.setCancelled(true);
+                }
+                return;
+            }
+            if (event.useInteractedBlock() != Event.Result.DENY && kinetics.use(player, part, event.getBlockFace(), event.getHand(), item)) {
+                event.setCancelled(true);
             }
             return;
         }
-
-        ItemStack item = event.getItem();
-        PartType type = kinetics.items.partOf(item);
-        if (type == null) {
-            return;
-        }
-        if (type == PartType.BELT) {
-            event.setCancelled(true);
+        if (held == null) {
             return;
         }
         event.setCancelled(true);
+        if (held == PartType.BELT) {
+            return;
+        }
         if (event.getHand() == EquipmentSlot.OFF_HAND && kinetics.items.partOf(player.getInventory().getItemInMainHand()) != null) {
             return;
         }
-        kinetics.place(player, type, block, event.getBlockFace(), event.getHand(), item);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onHitboxAttack(PrePlayerAttackEntityEvent event) {
-        KineticPart part = kinetics.partOf(event.getAttacked());
-        if (part == null) {
-            return;
-        }
-        event.setCancelled(true);
-        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
-            kinetics.breakByPlayer(event.getPlayer(), part);
-        } else {
-            kinetics.hit(event.getPlayer(), part);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onHitboxUse(PlayerInteractAtEntityEvent event) {
-        KineticPart part = kinetics.partOf(event.getRightClicked());
-        if (part == null) {
-            return;
-        }
-        event.setCancelled(true);
-        Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItem(event.getHand());
-        if (event.getHand() == EquipmentSlot.OFF_HAND && (!player.getInventory().getItemInMainHand().isEmpty() || item.isEmpty())) {
-            return;
-        }
-        kinetics.use(player, part, KineticsModule.faceOfHit(part, event.getClickedPosition()), event.getHand(), item);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onHitboxUsePlain(PlayerInteractEntityEvent event) {
-        if (!(event instanceof PlayerInteractAtEntityEvent) && kinetics.partOf(event.getRightClicked()) != null) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onPickHitbox(PlayerPickEntityEvent event) {
-        KineticPart part = kinetics.partOf(event.getEntity());
-        if (part != null) {
-            event.setCancelled(true);
-            kinetics.pick(event.getPlayer(), part);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onDamage(BlockDamageEvent event) {
-        KineticPart part = kinetics.partAt(event.getBlock());
-        if (part == null || !part.type.hasInvisibleHost()) {
-            return;
-        }
-        event.setCancelled(true);
-        if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
-            kinetics.hit(event.getPlayer(), part);
-        }
+        kinetics.place(player, held, block, event.getBlockFace(), event.getHand(), item);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -160,8 +100,9 @@ final class KineticsListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent event) {
-        KineticPart part = kinetics.partAt(event.getBlockPlaced());
-        if (part != null && event.getBlockReplacedState().getType() == part.type.host) {
+        Material placed = event.getBlockPlaced().getType();
+        boolean host = placed == Material.PETRIFIED_OAK_SLAB || placed == Material.WAXED_OXIDIZED_COPPER_CHAIN;
+        if (host && kinetics.items.partOf(event.getItemInHand()) == null) {
             event.setCancelled(true);
         }
     }

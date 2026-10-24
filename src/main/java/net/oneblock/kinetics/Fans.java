@@ -83,7 +83,7 @@ final class Fans {
         Block last = beam.blocks().getLast();
         BoundingBox box = BoundingBox.of(first, last);
         for (Entity e : fan.world.getNearbyEntities(box)) {
-            if (kinetics.partOf(e) != null || e.getType().name().endsWith("DISPLAY") || e.getType().name().equals("INTERACTION")) {
+            if (e.getType().name().endsWith("DISPLAY") || e.getType().name().equals("INTERACTION")) {
                 continue;
             }
             e.setVelocity(e.getVelocity().add(push));

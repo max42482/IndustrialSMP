@@ -6,7 +6,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Display;
-import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,19 +16,19 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 final class PartVisual {
     private static final Quaternionf ITEM_FLIP = new Quaternionf().rotationY((float) Math.PI);
     private static final Vector3f CENTER = new Vector3f(0.5f, 0.5f, 0.5f);
+    private static final Vector3f NONE = new Vector3f();
 
-    record Piece(String model, BlockFace forward, BlockFace spinFace, boolean custom) {
+    record Piece(String model, BlockFace forward, BlockFace spinFace, boolean custom, Vector3f offset) {
         Piece(String model, BlockFace forward, BlockFace spinFace) {
-            this(model, forward, spinFace, false);
+            this(model, forward, spinFace, false, NONE);
         }
 
         static Piece custom(String model, BlockFace forward) {
-            return new Piece(model, forward, null, true);
+            return new Piece(model, forward, null, true, NONE);
         }
     }
 
@@ -37,26 +36,10 @@ final class PartVisual {
     private final List<Piece> pieces;
     private final List<ItemDisplay> entities = new ArrayList<>();
     private final Map<Integer, float[]> customState = new java.util.HashMap<>();
-    private final Map<UUID, KineticPart> hitboxes;
-    private Interaction hitbox;
 
-    PartVisual(KineticPart part, Map<UUID, KineticPart> hitboxes) {
+    PartVisual(KineticPart part) {
         this.part = part;
         this.pieces = piecesFor(part);
-        this.hitboxes = hitboxes;
-    }
-
-    static float[] hitboxSize(KineticPart p) {
-        boolean vertical = p.axis == org.bukkit.Axis.Y;
-        return switch (p.type) {
-            case SHAFT -> vertical ? new float[]{0.4375f, 1, 0} : new float[]{1, 0.4375f, 0.28125f};
-            case COGWHEEL, LARGE_COGWHEEL -> vertical ? new float[]{1, 0.4375f, 0.28125f} : new float[]{1, 1, 0};
-            case HAND_CRANK, FUNNEL -> new float[]{0.75f, 0.75f, 0.125f};
-            case BELT -> new float[]{1, 0.8125f, 0};
-            case DEPOT -> new float[]{1, 0.5f, 0};
-            case SPEEDOMETER, STRESSOMETER -> new float[]{0.875f, 0.875f, 0.0625f};
-            default -> new float[]{1, 1, 0};
-        };
     }
 
     static ItemStack modelItem(String model) {
@@ -81,17 +64,6 @@ final class PartVisual {
             });
             entities.add(d);
         }
-        if (part.type.hasInvisibleHost()) {
-            float[] size = hitboxSize(part);
-            Location bottom = new Location(part.world, part.x + 0.5, part.y + size[2], part.z + 0.5);
-            hitbox = part.world.spawn(bottom, Interaction.class, e -> {
-                e.setInteractionWidth(size[0]);
-                e.setInteractionHeight(size[1]);
-                e.setResponsive(true);
-                e.setPersistent(false);
-            });
-            hitboxes.put(hitbox.getUniqueId(), part);
-        }
     }
 
     void remove() {
@@ -99,11 +71,6 @@ final class PartVisual {
             d.remove();
         }
         entities.clear();
-        if (hitbox != null) {
-            hitboxes.remove(hitbox.getUniqueId());
-            hitbox.remove();
-            hitbox = null;
-        }
     }
 
     void apply(float angle, int ticks) {
@@ -158,7 +125,7 @@ final class PartVisual {
     private Transformation transform(Piece piece, float angle, int index) {
         Vector3f forward = new Vector3f(piece.forward().getModX(), piece.forward().getModY(), piece.forward().getModZ());
         Quaternionf rotation = new Quaternionf().rotationTo(0, 0, 1, forward.x, forward.y, forward.z);
-        Vector3f translation = new Vector3f(CENTER);
+        Vector3f translation = new Vector3f(CENTER).add(piece.offset());
         if (piece.spinFace() != null) {
             float spin = (float) part.faceK(piece.spinFace()) * angle * (piece.spinFace() == piece.forward() ? 1 : -1);
             rotation = new Quaternionf().rotationAxis((float) Math.toRadians(spin), forward).mul(rotation);
@@ -198,7 +165,7 @@ final class PartVisual {
             }
             case BELT -> {
                 list.add(new Piece("belt", p.facing, null));
-                list.add(new Piece("shaft", axisFace, axisFace));
+                list.add(new Piece("shaft", axisFace, axisFace, false, new Vector3f(0, -3 / 16f, 0)));
             }
             case DEPOT -> list.add(new Piece("depot", BlockFace.UP, null));
             case FUNNEL -> list.add(new Piece("funnel", p.facing, null));

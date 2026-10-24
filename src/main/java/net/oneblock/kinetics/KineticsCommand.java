@@ -298,8 +298,9 @@ public final class KineticsCommand implements TabExecutor {
         sender.sendMessage(Text.mm(" " + (stress == 64 ? "<green>✔" : "<red>✘") + " <white>Drill stress 4 SU x 16 RPM <gray>= "
                 + Goggles.su(stress) + " SU"));
         Block shaftBlock = checks.getFirst().part().block();
-        sender.sendMessage(Text.mm(" " + (shaftBlock.getCollisionShape().getBoundingBoxes().isEmpty() ? "<green>✔" : "<red>✘")
-                + " <white>Walk-through shaft <gray>(clickable box " + shaftBlock.getBoundingBox().getWidthX() + " wide)"));
+        boolean thin = shaftBlock.getType() == PartType.SHAFT.host && shaftBlock.getBoundingBox().getHeight() < 0.3;
+        sender.sendMessage(Text.mm(" " + (thin ? "<green>✔" : "<red>✘") + " <white>Shaft outline is thin <gray>("
+                + String.format(Locale.US, "%.2f", shaftBlock.getBoundingBox().getHeight()) + " blocks)"));
 
         KineticPart rival = kinetics.placeDirect(w, x + 5, y, z, PartType.CREATIVE_MOTOR, null, org.bukkit.block.BlockFace.WEST, -16);
         kinetics.solvePending();
