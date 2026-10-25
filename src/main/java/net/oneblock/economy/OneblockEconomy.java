@@ -10,6 +10,7 @@ import net.oneblock.economy.command.EcoCommand;
 import net.oneblock.economy.command.MarketCommands;
 import net.oneblock.economy.command.MoneyCommands;
 import net.oneblock.economy.command.OrdersCommand;
+import net.oneblock.economy.command.RestartCommand;
 import net.oneblock.economy.db.Database;
 import net.oneblock.economy.gui.Menu;
 import net.oneblock.economy.gui.MenuListener;
@@ -115,6 +116,9 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
         register("market", marketCommands);
         register("collect", marketCommands);
         register("sidebar", new SidebarCommand(sidebar));
+        RestartCommand restart = new RestartCommand(this);
+        register("reboot", restart);
+        getServer().getPluginManager().registerEvents(restart, this);
         register("kinetics", new KineticsCommand(kinetics));
         kinetics.setEconomy(new KineticEconomy() {
             @Override

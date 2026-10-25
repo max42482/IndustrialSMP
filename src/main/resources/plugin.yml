@@ -63,6 +63,10 @@ commands:
     aliases: [kin]
     permission: oneblockeconomy.kinetics.admin
     usage: /kinetics <give|info>
+  reboot:
+    description: Restart the server with a countdown. /restart works too.
+    permission: oneblockeconomy.admin
+    usage: /restart [seconds|now|cancel]
   sidebar:
     description: Show or hide the sidebar.
     aliases: [sb, scoreboard]
