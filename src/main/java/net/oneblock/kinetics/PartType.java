@@ -97,7 +97,17 @@ public enum PartType {
             "Carries energy between blocks it touches."),
     GENERATOR("Generator", Orientation.FACING, Material.SPAWNER, Material.BLAST_FURNACE, "generator",
             "Burns fuel to make energy (FE). No rotation needed.",
-            "Feed it with right-click, a funnel or a pipe. Lava works too.");
+            "Feed it with right-click, a funnel or a pipe. Lava works too."),
+
+    SELL_CHEST("Kinetic Sell Chest", Orientation.AXIS, Material.SPAWNER, Material.CHEST, "sell_chest", 27, Axis.Y, 0,
+            "Sells everything that goes in to the market and pays you.",
+            "Feed it with belts, funnels, pipes or a drill. Turn it from below, faster sells quicker."),
+    ORDER_HOPPER("Order Hopper", Orientation.AXIS, Material.SPAWNER, Material.HOPPER, "order_hopper", 27, Axis.Y, 0,
+            "Fills other players' /orders with what goes in, at their price.",
+            "Only takes items someone has ordered. Turn it from below."),
+    CONTRACT_FEEDER("Contract Feeder", Orientation.FACING, Material.SPAWNER, Material.LECTERN, "contract_feeder", 27, null, 0,
+            "Link your /ah supply contracts to it instead of a chest.",
+            "Keeps 2 deliveries in stock and passes the rest out the front. Turn it from below.");
 
     public enum Orientation { AXIS, FACING }
 

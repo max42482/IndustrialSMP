@@ -48,6 +48,42 @@ public final class AuctionManager {
 
     public enum Result { OK, INVALID, TOO_MANY, NO_MONEY, GONE, OWN, NO_SPACE }
 
+    public interface ContractSource {
+        Inventory inventory(Block block);
+
+        String problem(Block block);
+    }
+
+    private ContractSource sources;
+
+    public void setContractSource(ContractSource sources) {
+        this.sources = sources;
+    }
+
+    Inventory sourceInventory(Block block) {
+        if (block.getState() instanceof Container container) {
+            return container.getInventory();
+        }
+        return sources == null ? null : sources.inventory(block);
+    }
+
+    public boolean isSource(Block block) {
+        return sourceInventory(block) != null;
+    }
+
+    public List<ItemStack> neededAt(Block block) {
+        List<ItemStack> list = new ArrayList<>();
+        for (Listing l : listings.values()) {
+            if (l.type == Listing.Type.CONTRACT && l.chestX == block.getX() && l.chestY == block.getY() && l.chestZ == block.getZ()
+                    && block.getWorld().getName().equals(l.chestWorld)) {
+                ItemStack need = l.item.clone();
+                need.setAmount(l.perDelivery * 2);
+                list.add(need);
+            }
+        }
+        return list;
+    }
+
     public AuctionManager(Plugin plugin, Database db, AccountManager accounts, CollectionManager collection) throws SQLException {
         this.plugin = plugin;
         this.db = db;
@@ -183,7 +219,7 @@ public final class AuctionManager {
     public Result createContract(Player seller, ItemStack template, int perDelivery, long pricePerDelivery,
                                  int deliveries, int intervalMinutes, Block chest) {
         if (perDelivery <= 0 || pricePerDelivery <= 0 || deliveries <= 0 || deliveries > maxDeliveries
-                || intervalMinutes < minIntervalMinutes || !(chest.getState() instanceof Container)) {
+                || intervalMinutes < minIntervalMinutes || !isSource(chest)) {
             return Result.INVALID;
         }
         if (countFor(seller.getUniqueId()) >= maxListings) {
@@ -316,11 +352,16 @@ public final class AuctionManager {
     }
 
     private void deliverLoaded(Listing l, Block block) {
-        if (!(block.getState() instanceof Container container)) {
+        Inventory inv = sourceInventory(block);
+        if (inv == null) {
             miss(l, "the linked chest is gone");
             return;
         }
-        Inventory inv = container.getInventory();
+        String problem = sources == null ? null : sources.problem(block);
+        if (problem != null) {
+            miss(l, problem);
+            return;
+        }
         if (Items.countSimilar(inv, l.item) < l.perDelivery) {
             miss(l, "the linked chest doesn't have " + l.perDelivery + "x " + describe(l.item));
             return;

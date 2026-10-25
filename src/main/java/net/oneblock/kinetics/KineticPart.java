@@ -104,7 +104,7 @@ public final class KineticPart {
             case MECHANICAL_DRILL, ENCASED_FAN, WINDMILL_BEARING -> List.of(facing.getOppositeFace());
             case MECHANICAL_PUMP -> Faces.around(axis);
             case STEAM_ENGINE, ELECTRIC_MOTOR -> List.of(facing);
-            case MILLSTONE -> List.of(BlockFace.DOWN);
+            case MILLSTONE, SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> List.of(BlockFace.DOWN);
             case BELT -> {
                 List<BlockFace> faces = new ArrayList<>(Faces.alongAxis(axis));
                 faces.add(facing);
@@ -157,7 +157,19 @@ public final class KineticPart {
     }
 
     double impactPerRpm(KineticsConfig config) {
-        return config.impact.getOrDefault(type, 0.0);
+        double base = config.impact.getOrDefault(type, 0.0);
+        return type == PartType.MECHANICAL_DRILL ? base * config.drillStress[drillTier() - 1] : base;
+    }
+
+    int drillTier() {
+        if (type != PartType.MECHANICAL_DRILL || extra.isEmpty()) {
+            return 1;
+        }
+        try {
+            return Math.clamp(Integer.parseInt(extra), 1, KineticItems.DRILL_TIERS);
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     ItemStack slot(int i) {

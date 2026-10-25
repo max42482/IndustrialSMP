@@ -485,6 +485,64 @@ public final class Models {
         m.put("generator_body", new Model(generator, 16));
         m.put("generator_glow", new Model(glow, 16));
         m.put("generator", new Model(join(generator, glow), 16));
+        phase7(m);
+    }
+
+    static final String GOLD = "minecraft:block/gold_block";
+    static final String DIAMOND = "minecraft:block/diamond_block";
+    static final String NETHERITE = "minecraft:block/netherite_block";
+    static final String HOPPER = "minecraft:block/hopper_inside";
+
+    private static void phase7(Map<String, Model> m) {
+        List<Box> chest = List.of(
+                box(0, 0, 0, 16, 2, 16, METAL),
+                box(1, 2, 1, 15, 12, 15, PLANKS),
+                box(0.6f, 4, 0.6f, 15.4f, 5, 15.4f, GOLD),
+                box(0.6f, 9, 0.6f, 15.4f, 10, 15.4f, GOLD),
+                box(0, 12, 0, 16, 14, 16, METAL),
+                box(7, 7, 15, 9, 10, 15.6f, GOLD));
+        List<Box> coin = new ArrayList<>(disc(9, 14.6f, 15.6f, GOLD, SIXTEEN));
+        coin.addAll(spokes(11, 1.5f, 14.8f, 15.4f, GOLD, EIGHT));
+        m.put("sell_chest_body", new Model(chest, 16));
+        m.put("sell_chest_coin", new Model(coin, 16));
+        m.put("sell_chest", new Model(join(chest, yUp(coin)), 16));
+
+        List<Box> hopper = List.of(
+                box(0, 10, 0, 16, 16, 2, METAL),
+                box(0, 10, 14, 16, 16, 16, METAL),
+                box(0, 10, 2, 2, 16, 14, METAL),
+                box(14, 10, 2, 16, 16, 14, METAL),
+                box(2, 10, 2, 14, 11, 14, HOPPER),
+                box(3, 3, 3, 13, 10, 13, METAL),
+                box(2.5f, 6, 2.5f, 13.5f, 7, 13.5f, GOLD),
+                box(5, 0, 5, 11, 3, 11, METAL));
+        List<Box> wheel = new ArrayList<>(spokes(10, 2, 11.2f, 12.2f, WOOD, EIGHT));
+        wheel.addAll(disc(3, 11.1f, 12.6f, METAL, EIGHT));
+        m.put("order_hopper_body", new Model(hopper, 16));
+        m.put("order_hopper_wheel", new Model(wheel, 16));
+        m.put("order_hopper", new Model(join(hopper, yUp(wheel)), 16));
+
+        List<Box> feeder = List.of(
+                box(0, 0, 0, 16, 2, 16, METAL),
+                box(1, 2, 1, 15, 13, 14, WOOD),
+                box(0.6f, 7, 0.6f, 15.4f, 8, 13.6f, GOLD),
+                box(0, 13, 0, 16, 15, 16, METAL),
+                box(4, 4, 14, 12, 12, 16, IRON),
+                box(5, 5, 15.6f, 11, 11, 16.1f, BLACK),
+                box(4, 15, 3, 12, 15.3f, 10, WHITE),
+                box(9, 15.3f, 7, 11, 15.6f, 9, RED));
+        m.put("contract_feeder_body", new Model(feeder, 16));
+        m.put("contract_feeder", new Model(feeder, 16));
+
+        String[] heads = {GOLD, DIAMOND, NETHERITE};
+        for (int tier = 2; tier <= 4; tier++) {
+            List<Box> head = drillHead(heads[tier - 2]);
+            m.put("drill_head_" + tier, new Model(head, 16));
+            List<Box> drill = new ArrayList<>(drillCasing());
+            drill.addAll(head);
+            drill.addAll(shaft(-1, 8));
+            m.put("drill_" + tier, new Model(drill, 18));
+        }
     }
 
     private static final float INSET = 0.04f;
@@ -581,11 +639,15 @@ public final class Models {
     }
 
     private static List<Box> drillHead() {
+        return drillHead(IRON);
+    }
+
+    private static List<Box> drillHead(String texture) {
         List<Box> list = new ArrayList<>();
         float[][] tiers = {{3, 9, 11}, {4.5f, 11, 13}, {6, 13, 15}, {7, 15, 18}};
         for (float[] t : tiers) {
             for (int i = 0; i < EIGHT.length; i++) {
-                list.add(new Box(new float[]{t[0], t[0], t[1] + i * INSET}, new float[]{16 - t[0], 16 - t[0], t[2] - i * INSET}, IRON, EIGHT[i]));
+                list.add(new Box(new float[]{t[0], t[0], t[1] + i * INSET}, new float[]{16 - t[0], 16 - t[0], t[2] - i * INSET}, texture, EIGHT[i]));
             }
         }
         return list;

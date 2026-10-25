@@ -210,7 +210,7 @@ final class PartVisual {
             case MECHANICAL_DRILL -> {
                 BlockFace back = p.facing.getOppositeFace();
                 list.add(new Piece("drill_casing", p.facing, null));
-                list.add(new Piece("drill_head", p.facing, back));
+                list.add(new Piece(p.drillTier() > 1 ? "drill_head_" + p.drillTier() : "drill_head", p.facing, back));
                 list.add(new Piece("drill_shaft", back, back));
             }
             case BELT -> {
@@ -273,6 +273,20 @@ final class PartVisual {
                 list.add(Piece.cog("pump_cog", p.facing, p));
             }
             case BLAZE_BURNER -> list.add(new Piece("blaze_burner", BlockFace.SOUTH, null));
+            case SELL_CHEST -> {
+                list.add(new Piece("sell_chest_body", BlockFace.SOUTH, null));
+                list.add(new Piece("sell_chest_coin", BlockFace.UP, BlockFace.UP));
+                list.add(new Piece("shaft_half", BlockFace.DOWN, BlockFace.DOWN));
+            }
+            case ORDER_HOPPER -> {
+                list.add(new Piece("order_hopper_body", BlockFace.SOUTH, null));
+                list.add(new Piece("order_hopper_wheel", BlockFace.UP, BlockFace.UP));
+                list.add(new Piece("shaft_half", BlockFace.DOWN, BlockFace.DOWN));
+            }
+            case CONTRACT_FEEDER -> {
+                list.add(new Piece("contract_feeder_body", p.facing, null));
+                list.add(new Piece("shaft_half", BlockFace.DOWN, BlockFace.DOWN));
+            }
             case STEAM_ENGINE -> {
                 list.add(new Piece("engine_body", p.facing, null));
                 list.add(Piece.custom("engine_piston", p.facing));

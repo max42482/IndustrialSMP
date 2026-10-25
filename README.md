@@ -25,8 +25,12 @@ The first chest on a new island is a starter kit with water, lava, seeds, sugar 
 - Fluids and storage: pipe, mechanical pump, fluid tank, item vault, steam engine, blaze burner
 - Electricity: alternator, generator, electric motor, accumulator, cable, connector, wire spool
 - Info: speedometer, stressometer, engineer's goggles
+- Economy: Kinetic Sell Chest, Order Hopper, Contract Feeder
+- Drill tiers: Mechanical, Brass, Diamond (Fortune I) and Netherite (Fortune II), each faster than the last
 
 Ore doubling works too: crush raw ore, then smelt it or wash it with a fan.
+
+**Economy machines.** All three take items from belts, funnels, pipes or a drill touching them, and need rotation from below. The Kinetic Sell Chest sells everything to the market and pays whoever placed it. The Order Hopper only takes items someone has a buy order for and fills those orders at their price. The Contract Feeder is a source for your `/ah` supply contracts (click it instead of a chest when you link one): it keeps 2 deliveries in stock and passes everything else out the front, so the rest of the line can keep going into a Sell Chest.
 
 **Fluids and storage.** Pipes connect by themselves to pumps, tanks, chests, vaults and machines, and you can see fluid and items moving through their glass windows. A pump moves fluids and items the way its arrows point. Turn it with a cogwheel next to it or a shaft into its side, and sneak + right-click it to turn it around. Fluid tanks hold 8 buckets per block, and tanks touching each other join into one big tank. Tanks can hold XP too: sneak + right-click with an empty hand to store yours, right-click to take a level back, or use glass bottles. A tank with XP in it pulls in nearby XP orbs. Item vaults hold 54 stacks and join up the same way. Put a steam engine on the side of a water tank with heat under it (fire, lava, blaze burners) for big power. Every burner under a big tank adds heat, and engines on the same tank share it.
 

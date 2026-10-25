@@ -185,9 +185,34 @@ public final class MachineUnlocks implements Listener {
                 shapeless(key, items.part(PartType.GENERATOR, 1), List.of(new RecipeChoice.MaterialChoice(Material.BLAST_FURNACE),
                         copperSheet, copperSheet, redstoneBlock, alloy)));
 
+        register(costs, "sell_chest", "Kinetic Sell Chest", () -> items.part(PartType.SELL_CHEST, 1),
+                "chest, 2 golden sheets, cogwheel + andesite alloy", key ->
+                shapeless(key, items.part(PartType.SELL_CHEST, 1), List.of(new RecipeChoice.MaterialChoice(Material.CHEST),
+                        goldenSheet, goldenSheet, cog, alloy)));
+        register(costs, "order_hopper", "Order Hopper", () -> items.part(PartType.ORDER_HOPPER, 1),
+                "hopper, golden sheet, cogwheel + andesite alloy", key ->
+                shapeless(key, items.part(PartType.ORDER_HOPPER, 1), List.of(new RecipeChoice.MaterialChoice(Material.HOPPER),
+                        goldenSheet, cog, alloy)));
+        register(costs, "contract_feeder", "Contract Feeder", () -> items.part(PartType.CONTRACT_FEEDER, 1),
+                "barrel, paper, golden sheet, cogwheel + andesite alloy", key ->
+                shapeless(key, items.part(PartType.CONTRACT_FEEDER, 1), List.of(barrel, new RecipeChoice.MaterialChoice(Material.PAPER),
+                        goldenSheet, cog, alloy)));
+        RecipeChoice gold = new RecipeChoice.MaterialChoice(Material.GOLD_INGOT);
+        RecipeChoice diamond = new RecipeChoice.MaterialChoice(Material.DIAMOND);
+        register(costs, "brass_drill", "Brass Drill", () -> items.drill(2, 1), "mechanical drill, golden sheet + 4 gold ingots", key ->
+                shapeless(key, items.drill(2, 1), List.of(drillOfTier(1), goldenSheet, gold, gold, gold, gold)));
+        register(costs, "diamond_drill", "Diamond Drill", () -> items.drill(3, 1), "brass drill + 3 diamonds", key ->
+                shapeless(key, items.drill(3, 1), List.of(drillOfTier(2), diamond, diamond, diamond)));
+        register(costs, "netherite_drill", "Netherite Drill", () -> items.drill(4, 1), "diamond drill + netherite ingot", key ->
+                shapeless(key, items.drill(4, 1), List.of(drillOfTier(3), new RecipeChoice.MaterialChoice(Material.NETHERITE_INGOT))));
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             syncRecipeBook(p);
         }
+    }
+
+    private RecipeChoice drillOfTier(int tier) {
+        return RecipeChoice.predicateChoice(i -> items.partOf(i) == PartType.MECHANICAL_DRILL && items.tierOf(i) == tier, items.drill(tier, 1));
     }
 
     private interface RecipeFactory {

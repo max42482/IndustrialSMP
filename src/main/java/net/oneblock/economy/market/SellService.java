@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.UUID;
 
 public final class SellService {
     private final MarketManager market;
@@ -51,6 +52,15 @@ public final class SellService {
         amounts.put(hand.getType(), hand.getAmount());
         player.getInventory().setItemInMainHand(null);
         return pay(player, amounts);
+    }
+
+    public long sellFor(UUID owner, ItemStack stack) {
+        if (!canSell(stack)) {
+            return 0;
+        }
+        long total = market.sell(stack.getType(), stack.getAmount());
+        accounts.deposit(owner, Currency.COINS, total, "SELL_MACHINE", stack.getAmount() + "x " + stack.getType().name());
+        return total;
     }
 
     private long pay(Player player, Map<Material, Integer> amounts) {

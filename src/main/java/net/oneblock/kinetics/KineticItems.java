@@ -15,11 +15,55 @@ public final class KineticItems {
     public static final String GOGGLES = "goggles";
     public static final String ALLOY = "andesite_alloy";
     public static final String WIRE_SPOOL = "wire_spool";
+    public static final int DRILL_TIERS = 4;
+    private static final String[] DRILL_NAMES = {"Mechanical Drill", "Brass Drill", "Diamond Drill", "Netherite Drill"};
+    private static final String[] DRILL_PERKS = {"", "Mines faster than a Mechanical Drill.", "Mines a lot faster, with Fortune I.",
+            "The fastest drill, with Fortune II."};
     private final NamespacedKey key;
+    private final NamespacedKey tierKey;
     private boolean useModels;
 
     KineticItems(Plugin plugin) {
         this.key = new NamespacedKey(plugin, "kinetic_item");
+        this.tierKey = new NamespacedKey(plugin, "drill_tier");
+    }
+
+    static String drillName(int tier) {
+        return DRILL_NAMES[Math.clamp(tier, 1, DRILL_TIERS) - 1];
+    }
+
+    public ItemStack drill(int tier, int amount) {
+        ItemStack item = part(PartType.MECHANICAL_DRILL, amount);
+        if (tier <= 1) {
+            return item;
+        }
+        int t = Math.min(tier, DRILL_TIERS);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Text.item("<gold>" + DRILL_NAMES[t - 1]));
+        List<String> lore = new ArrayList<>();
+        lore.add("<aqua>" + DRILL_PERKS[t - 1]);
+        for (String line : PartType.MECHANICAL_DRILL.description) {
+            lore.add("<gray>" + line);
+        }
+        meta.lore(lore.stream().map(Text::item).toList());
+        meta.getPersistentDataContainer().set(tierKey, PersistentDataType.INTEGER, t);
+        if (useModels) {
+            meta.setItemModel(new NamespacedKey("oneblock", "drill_" + t));
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public int tierOf(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) {
+            return 1;
+        }
+        Integer tier = item.getItemMeta().getPersistentDataContainer().get(tierKey, PersistentDataType.INTEGER);
+        return tier == null ? 1 : Math.clamp(tier, 1, DRILL_TIERS);
+    }
+
+    ItemStack forPart(KineticPart part) {
+        return part.type == PartType.MECHANICAL_DRILL ? drill(part.drillTier(), 1) : part(part.type, 1);
     }
 
     void useModels(boolean value) {

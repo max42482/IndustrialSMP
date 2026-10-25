@@ -3,7 +3,6 @@ package net.oneblock.economy.auction;
 import net.oneblock.economy.account.Currency;
 import net.oneblock.economy.util.Text;
 import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -33,8 +32,13 @@ public final class ContractLinkListener implements Listener {
     public void start(Player player, ItemStack template, int perDelivery, long price, int deliveries, int intervalMinutes) {
         pending.put(player.getUniqueId(), new Pending(template.clone(), perDelivery, price, deliveries, intervalMinutes,
                 System.currentTimeMillis() + auctions.linkTimeoutSeconds() * 1000L));
-        Text.send(player, "<aqua>Now right-click the chest or barrel the deliveries will come from. <gray>("
+        Text.send(player, "<aqua>Now right-click the chest, barrel or Contract Feeder the deliveries will come from. <gray>("
                 + auctions.linkTimeoutSeconds() + "s)");
+    }
+
+    public boolean linking(UUID player) {
+        Pending p = pending.get(player);
+        return p != null && System.currentTimeMillis() <= p.until();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -52,7 +56,7 @@ public final class ContractLinkListener implements Listener {
             return;
         }
         Block block = event.getClickedBlock();
-        if (block == null || !(block.getState() instanceof Container)) {
+        if (block == null || !auctions.isSource(block)) {
             return;
         }
         pending.remove(player.getUniqueId());

@@ -122,7 +122,7 @@ public final class KineticsCommand implements TabExecutor {
 
     private void placeCommand(CommandSender sender, String[] args) {
         if (args.length < 6) {
-            Text.send(sender, "<red>Usage: /kinetics place [part] [x] [y] [z] [x|y|z or north|east|...] [motor rpm] [world]");
+            Text.send(sender, "<red>Usage: /kinetics place [part] [x] [y] [z] [x|y|z or north|east|...] [motor rpm] [world] [owner or drill tier]");
             return;
         }
         PartType type = PartType.fromId(args[1]);
@@ -146,6 +146,19 @@ public final class KineticsCommand implements TabExecutor {
             }
             keepLoadedForConsole(sender, world, x, z, x, z);
             KineticPart part = kinetics.placeDirect(world, x, y, z, type, axis, facing, rpm);
+            if (part != null && args.length >= 9) {
+                if (type == PartType.MECHANICAL_DRILL) {
+                    part.extra = String.valueOf(Math.clamp(Integer.parseInt(args[8]), 1, KineticItems.DRILL_TIERS));
+                    part.visual.remove();
+                    part.visual = new PartVisual(part);
+                    part.visual.spawn();
+                    kinetics.markDirty(part);
+                    kinetics.registry.save(part);
+                } else if (Markets.isMarket(type)) {
+                    kinetics.markets.setOwner(part, Bukkit.getOfflinePlayer(args[8]).getUniqueId());
+                    kinetics.registry.save(part);
+                }
+            }
             Text.send(sender, part == null ? "<red>That spot is taken." : "<gray>Placed " + type.displayName + " at " + x + " " + y + " " + z + ".");
         } catch (IllegalArgumentException e) {
             Text.send(sender, "<red>Bad number or direction.");
@@ -296,6 +309,12 @@ public final class KineticsCommand implements TabExecutor {
         }
         if (part.type == PartType.STEAM_ENGINE) {
             to.sendMessage(Text.mm(" <gray>Boiler level: <white>" + part.boilerLevel + " <gray>engines: <white>" + part.boilerEngines));
+        }
+        if (part.type == PartType.MECHANICAL_DRILL) {
+            to.sendMessage(Text.mm(" <gray>Tier: <white>" + KineticItems.drillName(part.drillTier())));
+        }
+        if (Markets.isMarket(part.type)) {
+            to.sendMessage(Text.mm(" " + kinetics.markets.status(part)));
         }
         if (part.type == PartType.GENERATOR) {
             to.sendMessage(Text.mm(" " + kinetics.generators.status(part)));

@@ -23,12 +23,15 @@ import net.oneblock.island.IslandCommand;
 import net.oneblock.island.IslandModule;
 import net.oneblock.progression.MachineUnlocks;
 import net.oneblock.progression.Milestones;
+import net.oneblock.kinetics.KineticEconomy;
 import net.oneblock.kinetics.KineticsCommand;
 import net.oneblock.kinetics.KineticsModule;
 import net.oneblock.economy.util.Money;
 import net.oneblock.economy.util.Text;
 import net.oneblock.economy.vault.VaultHook;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -36,6 +39,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -111,6 +116,59 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
         register("collect", marketCommands);
         register("sidebar", new SidebarCommand(sidebar));
         register("kinetics", new KineticsCommand(kinetics));
+        kinetics.setEconomy(new KineticEconomy() {
+            @Override
+            public boolean sellable(ItemStack item) {
+                return sell.canSell(item);
+            }
+
+            @Override
+            public long sell(UUID owner, ItemStack item) {
+                return sell.sellFor(owner, item);
+            }
+
+            @Override
+            public boolean ordered(UUID owner, Material material) {
+                return orders.wants(owner, material);
+            }
+
+            @Override
+            public long[] fillOrders(UUID owner, Material material, int amount) {
+                OrderManager.Delivery d = orders.deliver(owner, material, amount);
+                return new long[]{d.delivered(), d.earned()};
+            }
+
+            @Override
+            public boolean linking(UUID player) {
+                return contractLinks.linking(player);
+            }
+
+            @Override
+            public List<ItemStack> contractNeeds(Block block) {
+                return auctions.neededAt(block);
+            }
+
+            @Override
+            public String name(UUID player) {
+                return accounts.nameOf(player);
+            }
+
+            @Override
+            public String money(long cents) {
+                return Currency.COINS.format(cents);
+            }
+        });
+        auctions.setContractSource(new AuctionManager.ContractSource() {
+            @Override
+            public Inventory inventory(Block block) {
+                return kinetics.contractInventory(block);
+            }
+
+            @Override
+            public String problem(Block block) {
+                return kinetics.contractProblem(block);
+            }
+        });
         kinetics.enable();
         getServer().getPluginManager().registerEvents(unlocks, this);
         getServer().getPluginManager().registerEvents(milestones, this);

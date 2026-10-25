@@ -101,20 +101,56 @@ public final class OrderManager {
         if (n <= 0) {
             return 0;
         }
-        ItemStack template = new ItemStack(order.material());
-        Items.removeSimilar(seller.getInventory(), template, n);
-        order.addFilled(n);
-
+        Items.removeSimilar(seller.getInventory(), new ItemStack(order.material()), n);
+        accounts.getOrCreate(seller.getUniqueId(), seller.getName());
         long gross = order.priceEach() * n;
         long tax = Math.round(gross * taxPercent / 100.0);
-        accounts.getOrCreate(seller.getUniqueId(), seller.getName());
-        accounts.deposit(seller.getUniqueId(), Currency.COINS, gross - tax, "ORDER_FILL",
-                n + "x " + order.material().name() + " for order #" + order.id() + " of " + accounts.nameOf(order.buyer()));
-        collection.add(order.buyer(), template, n, "Order from " + seller.getName());
+        pay(order, seller.getUniqueId(), seller.getName(), n);
+        Text.send(seller, "<gray>Delivered <white>" + n + "x " + Text.pretty(order.material()) + "</white> for "
+                + Currency.COINS.format(gross - tax) + (tax > 0 ? " <dark_gray>(" + Currency.COINS.format(tax) + " <dark_gray>tax)" : "") + "<gray>.");
+        return n;
+    }
 
+    public boolean wants(UUID seller, Material material) {
+        for (BuyOrder o : orders.values()) {
+            if (o.material() == material && o.remaining() > 0 && !o.buyer().equals(seller)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public record Delivery(int delivered, long earned) {
+    }
+
+    public Delivery deliver(UUID seller, Material material, int amount) {
+        int delivered = 0;
+        long earned = 0;
+        String name = accounts.nameOf(seller);
+        for (BuyOrder o : all()) {
+            if (delivered >= amount) {
+                break;
+            }
+            if (o.material() != material || o.buyer().equals(seller) || o.remaining() <= 0) {
+                continue;
+            }
+            int n = Math.min(amount - delivered, o.remaining());
+            earned += pay(o, seller, name, n);
+            delivered += n;
+        }
+        return new Delivery(delivered, earned);
+    }
+
+    private long pay(BuyOrder order, UUID seller, String sellerName, int n) {
+        order.addFilled(n);
+        long gross = order.priceEach() * n;
+        long tax = Math.round(gross * taxPercent / 100.0);
+        accounts.deposit(seller, Currency.COINS, gross - tax, "ORDER_FILL",
+                n + "x " + order.material().name() + " for order #" + order.id() + " of " + accounts.nameOf(order.buyer()));
+        collection.add(order.buyer(), new ItemStack(order.material()), n, "Order from " + sellerName);
         Player buyer = Bukkit.getPlayer(order.buyer());
         if (buyer != null) {
-            Text.send(buyer, "<white>" + Text.escape(seller.getName()) + "</white> <gray>delivered <white>" + n + "x "
+            Text.send(buyer, "<white>" + Text.escape(sellerName) + "</white> <gray>delivered <white>" + n + "x "
                     + Text.pretty(order.material()) + "</white> to your order. <dark_gray>(/collect)");
         }
         if (order.remaining() <= 0) {
@@ -126,9 +162,7 @@ public final class OrderManager {
         } else {
             db.execute("UPDATE orders SET filled = ? WHERE id = ?", order.filled(), order.id());
         }
-        Text.send(seller, "<gray>Delivered <white>" + n + "x " + Text.pretty(order.material()) + "</white> for "
-                + Currency.COINS.format(gross - tax) + (tax > 0 ? " <dark_gray>(" + Currency.COINS.format(tax) + " <dark_gray>tax)" : "") + "<gray>.");
-        return n;
+        return gross - tax;
     }
 
     public boolean cancel(BuyOrder order) {

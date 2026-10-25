@@ -23,12 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class Machines {
-    private static final ItemStack DRILL_TOOL = new ItemStack(Material.IRON_PICKAXE);
+    private static final ItemStack[] DRILL_TOOLS = {tool(Material.IRON_PICKAXE, 0), tool(Material.IRON_PICKAXE, 0),
+            tool(Material.DIAMOND_PICKAXE, 1), tool(Material.NETHERITE_PICKAXE, 2)};
 
     private final KineticsModule kinetics;
 
     Machines(KineticsModule kinetics) {
         this.kinetics = kinetics;
+    }
+
+    private static ItemStack tool(Material material, int fortune) {
+        ItemStack item = new ItemStack(material);
+        if (fortune > 0) {
+            item.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.FORTUNE, fortune);
+        }
+        return item;
     }
 
     boolean updateWaterWheel(KineticPart wheel) {
@@ -91,7 +100,7 @@ final class Machines {
             drill.drillTarget = key;
         }
         float hardness = target.getType().getHardness();
-        float ticksPerStage = Math.max(1, hardness / (float) (Math.abs(drill.speed) / 100));
+        float ticksPerStage = Math.max(1, hardness / (float) (Math.abs(drill.speed) * kinetics.config.drillSpeed[drill.drillTier() - 1] / 100));
         drill.drillProgress++;
         int stage = (int) (drill.drillProgress / ticksPerStage);
         if (stage >= 10) {
@@ -133,7 +142,7 @@ final class Machines {
     }
 
     private void breakBlock(KineticPart drill, Block target) {
-        List<ItemStack> drops = new ArrayList<>(target.getDrops(DRILL_TOOL));
+        List<ItemStack> drops = new ArrayList<>(target.getDrops(DRILL_TOOLS[drill.drillTier() - 1]));
         BlockState state = target.getState();
         if (state instanceof Lootable lootable && lootable.getLootTable() != null) {
             drops.addAll(lootable.getLootTable().populateLoot(ThreadLocalRandom.current(), new LootContext.Builder(target.getLocation()).build()));
@@ -166,7 +175,18 @@ final class Machines {
             if (f == drill.facing || left.isEmpty()) {
                 continue;
             }
-            if (drill.block().getRelative(f).getState() instanceof Container container) {
+            Block side = drill.block().getRelative(f);
+            KineticPart machine = kinetics.partAt(side);
+            if (machine != null && Markets.isStorage(machine.type)) {
+                List<ItemStack> rest = new ArrayList<>();
+                for (ItemStack item : left) {
+                    ItemStack r = kinetics.ports.insert(side, item, f);
+                    if (r != null) {
+                        rest.add(r);
+                    }
+                }
+                left = rest;
+            } else if (side.getState() instanceof Container container) {
                 left = new ArrayList<>(container.getInventory().addItem(left.toArray(new ItemStack[0])).values());
             }
         }

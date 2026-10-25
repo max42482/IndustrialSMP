@@ -22,7 +22,7 @@ final class ItemPorts {
         KineticPart part = kinetics.partAt(target);
         if (part != null) {
             return switch (part.type) {
-                case BELT, DEPOT, MILLSTONE, FUNNEL, ITEM_VAULT, BLAZE_BURNER, GENERATOR -> true;
+                case BELT, DEPOT, MILLSTONE, FUNNEL, ITEM_VAULT, BLAZE_BURNER, GENERATOR, SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> true;
                 default -> false;
             };
         }
@@ -43,6 +43,7 @@ final class ItemPorts {
                 case ITEM_VAULT -> kinetics.vaults.insert(part, stack);
                 case BLAZE_BURNER -> kinetics.boilers.acceptFuel(part, stack);
                 case GENERATOR -> kinetics.generators.acceptFuel(part, stack);
+                case SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> kinetics.markets.accept(part, stack);
                 default -> stack;
             };
         }

@@ -80,6 +80,7 @@ progression:
     crushing_wheel: 3
     steam_engine: 5
     generator: 2
+    sell_chest: 2
   # Cogs to unlock each recipe (0 = free starter recipe).
   unlock-costs:
     andesite_alloy: 0
@@ -116,6 +117,12 @@ progression:
     cable: 2
     wire_spool: 2
     generator: 5
+    sell_chest: 6
+    order_hopper: 5
+    contract_feeder: 5
+    brass_drill: 6
+    diamond_drill: 10
+    netherite_drill: 20
 
 # Create-style rotation. Speeds are in RPM, stress in SU (stress units), like Create.
 kinetics:
@@ -174,6 +181,14 @@ kinetics:
     max-wire-length: 16
     # Generators burn fuel and make this much FE per tick while something needs power.
     generator-fe-per-tick: 64
+  # Kinetic Sell Chest, Order Hopper and Contract Feeder handle RPM x this many items per second.
+  economy-machines:
+    items-per-rpm: 0.5
+  # Drill tiers 1-4 (Mechanical, Brass, Diamond, Netherite): mining speed and stress multipliers.
+  # Diamond drills mine with Fortune I and Netherite drills with Fortune II.
+  drill-tiers:
+    speed: [1, 1.6, 2.5, 4]
+    stress: [1, 1.5, 2, 3]
   # Stress a part uses per RPM it turns at. Shafts and gears are free, like in Create.
   # A drill at 8 RPM uses 4 x 8 = 32 SU, so one water wheel runs 8 drills - or fewer, faster ones.
   stress-impact:
@@ -190,6 +205,9 @@ kinetics:
     crushing_wheel: 8
     mechanical_pump: 4
     alternator: 8
+    sell_chest: 4
+    order_hopper: 4
+    contract_feeder: 2
 
 # The machines' 3D models. The plugin builds the pack and can serve it itself.
 resource-pack:

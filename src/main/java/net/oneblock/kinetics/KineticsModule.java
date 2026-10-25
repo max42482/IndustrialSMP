@@ -67,6 +67,7 @@ public final class KineticsModule {
     final Boilers boilers = new Boilers(this);
     final Energy energy = new Energy(this);
     final Generators generators = new Generators(this);
+    final Markets markets = new Markets(this);
     private final ResourcePackHost pack;
     private final Set<KineticPart> dirty = new LinkedHashSet<>();
     private final Set<KineticPart> activeCranks = new HashSet<>();
@@ -87,6 +88,18 @@ public final class KineticsModule {
 
     public KineticItems items() {
         return items;
+    }
+
+    public void setEconomy(KineticEconomy economy) {
+        markets.economy = economy;
+    }
+
+    public org.bukkit.inventory.Inventory contractInventory(Block block) {
+        return markets.feederInventory(block);
+    }
+
+    public String contractProblem(Block block) {
+        return markets.feederProblem(block);
     }
 
     public void configure(ConfigurationSection kinetics, ConfigurationSection resourcePack) {
@@ -162,7 +175,7 @@ public final class KineticsModule {
                 tanks.unload(p);
                 tanks.invalidate();
             }
-            case ITEM_VAULT -> vaults.unload(p);
+            case ITEM_VAULT, SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> vaults.unload(p);
             case BLAZE_BURNER -> boilers.unload(p);
             case CONNECTOR -> energy.unload(p);
             default -> {
@@ -259,13 +272,17 @@ public final class KineticsModule {
             axis = Faces.axisOf(player.getFacing());
         }
         boolean outward = type == PartType.FUNNEL || type == PartType.CONNECTOR || type == PartType.ENCASED_FAN
-                || type == PartType.WINDMILL_BEARING || type == PartType.STEAM_ENGINE || type == PartType.GENERATOR;
+                || type == PartType.WINDMILL_BEARING || type == PartType.STEAM_ENGINE || type == PartType.GENERATOR
+                || type == PartType.CONTRACT_FEEDER;
         BlockFace facing = outward ? face : face.getOppositeFace();
         if (type == PartType.GENERATOR && Faces.axisOf(face) == Axis.Y) {
             facing = player.getFacing().getOppositeFace();
         }
         if (type == PartType.WINDMILL_BEARING && Tag.WOOL.isTagged(clicked.getType())) {
             facing = face.getOppositeFace();
+        }
+        if (type == PartType.CONTRACT_FEEDER && Faces.axisOf(face) == Axis.Y) {
+            facing = player.getFacing();
         }
         boolean backPowered = type == PartType.MECHANICAL_DRILL || type == PartType.ENCASED_FAN || type == PartType.WINDMILL_BEARING;
         if (backPowered && !player.isSneaking()) {
@@ -282,6 +299,12 @@ public final class KineticsModule {
         }
         KineticPart part = new KineticPart(target.getWorld(), target.getX(), target.getY(), target.getZ(), type,
                 axis, facing, config.creativeMotorStep);
+        if (type == PartType.MECHANICAL_DRILL && items.tierOf(item) > 1) {
+            part.extra = String.valueOf(items.tierOf(item));
+        }
+        if (Markets.isMarket(type)) {
+            markets.setOwner(part, player.getUniqueId());
+        }
 
         BlockState replaced = target.getState();
         setHost(target, part);
@@ -445,7 +468,7 @@ public final class KineticsModule {
             case DEPOT -> depots.dropContents(part);
             case MILLSTONE -> millstones.dropContents(part);
             case CRUSHING_WHEEL -> crushers.dropContents(part);
-            case ITEM_VAULT -> vaults.dropContents(part);
+            case ITEM_VAULT, SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> vaults.dropContents(part);
             case CONNECTOR -> energy.removeWires(part, dropItem);
             case WINDMILL_BEARING -> {
                 if (part.state instanceof Windmills.Sails s && !s.blocks.isEmpty()) {
@@ -457,7 +480,7 @@ public final class KineticsModule {
         }
         removePart(part);
         if (dropItem) {
-            part.world.dropItemNaturally(part.center(), items.part(part.type, 1));
+            part.world.dropItemNaturally(part.center(), items.forPart(part));
         }
     }
 
@@ -606,6 +629,14 @@ public final class KineticsModule {
                 }
                 vaults.open(player, part);
             }
+            case SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> {
+                if (part.type == PartType.CONTRACT_FEEDER && markets.linking(player.getUniqueId())
+                        || player.isSneaking() && !emptyHand) {
+                    return false;
+                }
+                vaults.open(player, part);
+                player.sendActionBar(Text.mm(markets.status(part)));
+            }
             default -> {
                 return false;
             }
@@ -639,7 +670,7 @@ public final class KineticsModule {
         if (empty < 0) {
             empty = inv.getHeldItemSlot();
         }
-        inv.setItem(empty, items.part(part.type, 1));
+        inv.setItem(empty, items.forPart(part));
         inv.setHeldItemSlot(empty);
     }
 
@@ -728,6 +759,7 @@ public final class KineticsModule {
                 case FLUID_PIPE -> pipes.tickPipe(p, tick);
                 case FLUID_TANK -> tanks.tick(p, tick);
                 case GENERATOR -> generators.tick(p, tick);
+                case SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> markets.tick(p, tick);
                 default -> {
                 }
             }
@@ -746,7 +778,7 @@ public final class KineticsModule {
     private void saveDirty(List<KineticPart> all) {
         Set<Long> chunks = new HashSet<>();
         for (KineticPart p : all) {
-            if (p.type == PartType.ITEM_VAULT) {
+            if (p.state instanceof Vaults.Holder) {
                 vaults.sync(p);
             }
             if (!p.dirty) {

@@ -50,6 +50,8 @@ final class Goggles {
             case STEAM_ENGINE -> describe(part) + " <dark_gray>| <gray>Boiler level <white>" + part.boilerLevel
                     + (part.boilerEngines > 1 ? " <gray>shared by <white>" + part.boilerEngines + " <gray>engines" : "")
                     + (part.boilerLevel == 0 ? " <red>Needs water and heat" : "");
+            case SELL_CHEST, ORDER_HOPPER, CONTRACT_FEEDER -> kinetics.markets.status(part);
+            case MECHANICAL_DRILL -> describe(part).replaceFirst("Mechanical Drill", KineticItems.drillName(part.drillTier()));
             case ACCUMULATOR, CONNECTOR, CABLE -> "<gold>" + part.type.displayName + " <dark_gray>| " + kinetics.energy.describe(part);
             case ALTERNATOR, ELECTRIC_MOTOR -> describe(part) + " <dark_gray>| " + kinetics.energy.describe(part);
             default -> describe(part);

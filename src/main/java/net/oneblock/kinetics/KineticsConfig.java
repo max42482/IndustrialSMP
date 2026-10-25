@@ -36,10 +36,16 @@ final class KineticsConfig {
     long accumulatorCapacity = 500_000;
     int maxWireLength = 16;
     double generatorFe = 64;
+    double marketItemsPerRpm = 0.5;
+    double[] drillSpeed = {1, 1.6, 2.5, 4};
+    double[] drillStress = {1, 1.5, 2, 3};
     final Map<PartType, Double> impact = new EnumMap<>(PartType.class);
 
     void load(ConfigurationSection c) {
         impact.clear();
+        impact.put(PartType.SELL_CHEST, 4.0);
+        impact.put(PartType.ORDER_HOPPER, 4.0);
+        impact.put(PartType.CONTRACT_FEEDER, 2.0);
         impact.put(PartType.MECHANICAL_DRILL, 4.0);
         impact.put(PartType.MILLSTONE, 4.0);
         impact.put(PartType.MECHANICAL_PRESS, 8.0);
@@ -80,6 +86,9 @@ final class KineticsConfig {
         accumulatorCapacity = Math.max(1000, c.getLong("energy.accumulator-capacity", 500_000));
         maxWireLength = Math.max(2, c.getInt("energy.max-wire-length", 16));
         generatorFe = Math.max(0, c.getDouble("energy.generator-fe-per-tick", 64));
+        marketItemsPerRpm = Math.max(0.01, c.getDouble("economy-machines.items-per-rpm", 0.5));
+        drillSpeed = tiers(c.getDoubleList("drill-tiers.speed"), drillSpeed);
+        drillStress = tiers(c.getDoubleList("drill-tiers.stress"), drillStress);
         ConfigurationSection s = c.getConfigurationSection("stress-impact");
         if (s != null) {
             for (String key : s.getKeys(false)) {
@@ -89,6 +98,17 @@ final class KineticsConfig {
                 }
             }
         }
+    }
+
+    private static double[] tiers(java.util.List<Double> values, double[] fallback) {
+        if (values.size() < KineticItems.DRILL_TIERS) {
+            return fallback;
+        }
+        double[] out = new double[KineticItems.DRILL_TIERS];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = Math.max(0.1, values.get(i));
+        }
+        return out;
     }
 
     static double ticksAt(int base, double rpm) {

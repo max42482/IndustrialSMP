@@ -44,7 +44,7 @@ final class Vaults {
             return h.inventory;
         }
         Holder h = new Holder(vault);
-        h.inventory = Bukkit.createInventory(h, vault.slots.length, Text.mm("<dark_gray>Item Vault"));
+        h.inventory = Bukkit.createInventory(h, vault.slots.length, Text.mm("<dark_gray>" + vault.type.displayName));
         h.inventory.setContents(vault.slots.clone());
         vault.state = h;
         return h.inventory;
@@ -115,6 +115,11 @@ final class Vaults {
                 }
             }
         }
+    }
+
+    ItemStack insertInto(KineticPart part, ItemStack stack) {
+        Map<Integer, ItemStack> rest = inventory(part).addItem(stack.clone());
+        return rest.isEmpty() ? null : rest.values().iterator().next();
     }
 
     ItemStack insert(KineticPart vault, ItemStack stack) {
