@@ -4,7 +4,7 @@ prefix: "<dark_gray>[<gold>Economy</gold>]</dark_gray> "
 
 currency:
   # Coins: everyday money. Cogs: rare currency earned from industry milestones.
-  coins-symbol: "⛁"
+  coins-symbol: "$"
   cogs-symbol: "⚙"
   starting-coins: 100.0
   starting-cogs: 0
@@ -21,7 +21,7 @@ sidebar:
   # {player} {money} {money_full} {cogs} {rush} {collect} {orders} {listings}
   # {online} {max_players} {ping} {playtime}
   lines:
-    - "<green>⛁ <white>Money <green>{money}"
+    - "<green>$ <white>Money <green>{money}"
     - "<aqua>⚙ <white>Cogs <aqua>{cogs}"
     - "<red>⌛ <white>Playtime <red>{playtime}"
 
@@ -206,6 +206,7 @@ resource-pack:
 
 market:
   # Prices move both ways. Each item has a normal amount that gets sold over time, worth normal-value coins
+  # for every player who is usually online (so the market works the same with 5 players or 1000)
   # (cheap items need more units, expensive ones fewer). Selling more than that pushes the price down
   # (double the normal amount = half price, never below base * min-factor). Selling less lets it climb
   # above the base price, up to base * max-factor when nobody sells it for a few hours.

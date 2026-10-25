@@ -40,6 +40,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -162,9 +164,18 @@ public final class OneblockEconomy extends JavaPlugin implements Listener {
     public void applyConfig() throws SQLException {
         reloadConfig();
         getConfig().options().copyDefaults(true);
+        if ("⛁".equals(getConfig().getString("currency.coins-symbol"))) {
+            getConfig().set("currency.coins-symbol", "$");
+        }
+        List<String> lines = new ArrayList<>(getConfig().getStringList("sidebar.lines"));
+        int oldMoney = lines.indexOf("<green>⛁ <white>Money <green>{money}");
+        if (oldMoney >= 0) {
+            lines.set(oldMoney, "<green>$ <white>Money <green>{money}");
+            getConfig().set("sidebar.lines", lines);
+        }
         saveConfig();
         Text.setPrefix(getConfig().getString("prefix", ""));
-        Currency.setSymbols(getConfig().getString("currency.coins-symbol", "⛁"), getConfig().getString("currency.cogs-symbol", "⚙"));
+        Currency.setSymbols(getConfig().getString("currency.coins-symbol", "$"), getConfig().getString("currency.cogs-symbol", "⚙"));
         market.load(getConfig().getConfigurationSection("market"),
                 YamlConfiguration.loadConfiguration(new File(getDataFolder(), "prices.yml")));
         orders.configure(getConfig().getInt("orders.max-per-player", 10), getConfig().getDouble("orders.tax-percent", 0));

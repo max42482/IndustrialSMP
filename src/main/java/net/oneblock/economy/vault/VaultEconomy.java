@@ -40,7 +40,7 @@ public final class VaultEconomy extends AbstractEconomy {
 
     @Override
     public String format(double amount) {
-        return Money.format(Money.fromCoins(amount)) + " coins";
+        return "$" + Money.format(Money.fromCoins(amount));
     }
 
     @Override

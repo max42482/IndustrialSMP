@@ -29,6 +29,7 @@ public final class MarketManager {
     private double maxFactor;
     private double minFactor;
     private double decayPerMinute;
+    private double activePlayers = 1;
     private int sampleMinutes;
     private boolean eventsEnabled;
     private int eventInterval;
@@ -82,6 +83,15 @@ public final class MarketManager {
         minutesUntilEvent = eventInterval;
 
         Map<Material, ItemMarket> previous = new LinkedHashMap<>(items);
+        if (previous.isEmpty()) {
+            db.executeNow("CREATE TABLE IF NOT EXISTS market_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
+            for (String value : db.queryNow("SELECT value FROM market_meta WHERE key = 'players'", rs -> rs.getString(1))) {
+                try {
+                    activePlayers = Math.max(1, Double.parseDouble(value));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
         items.clear();
         for (String key : prices.getKeys(false)) {
             Material material = Material.matchMaterial(key);
@@ -104,7 +114,6 @@ public final class MarketManager {
         }
 
         if (previous.isEmpty()) {
-            db.executeNow("CREATE TABLE IF NOT EXISTS market_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)");
             boolean twoWay = !db.queryNow("SELECT value FROM market_meta WHERE key = 'model'", rs -> rs.getString(1)).isEmpty();
             for (Object[] row : db.queryNow("SELECT material, saturation, history FROM market_items",
                     rs -> new Object[]{rs.getString(1), rs.getDouble(2), rs.getString(3)})) {
@@ -137,7 +146,7 @@ public final class MarketManager {
     }
 
     private double normal(ItemMarket m) {
-        return (double) normalCents / Math.max(1, m.baseCents);
+        return normalCents * Math.max(1, activePlayers) / Math.max(1, m.baseCents);
     }
 
     private double factor(ItemMarket m, double supply) {
@@ -270,7 +279,13 @@ public final class MarketManager {
         return minutesUntilEvent;
     }
 
+    public double activePlayers() {
+        return activePlayers;
+    }
+
     public void tickMinute() {
+        activePlayers = activePlayers * decayPerMinute + Bukkit.getOnlinePlayers().size() * (1 - decayPerMinute);
+        db.execute("INSERT OR REPLACE INTO market_meta (key, value) VALUES ('players', ?)", Double.toString(activePlayers));
         for (ItemMarket m : items.values()) {
             if (m.saturation > 0.01) {
                 m.saturation *= decayPerMinute;

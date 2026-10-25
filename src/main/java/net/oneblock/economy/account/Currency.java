@@ -8,7 +8,7 @@ public enum Currency {
     COINS,
     COGS;
 
-    private static String coinSymbol = "⛁";
+    private static String coinSymbol = "$";
     private static String cogSymbol = "⚙";
 
     public static void setSymbols(String coins, String cogs) {
@@ -18,7 +18,7 @@ public enum Currency {
 
     public String format(long amount) {
         return switch (this) {
-            case COINS -> "<gold>" + Money.format(amount) + " " + coinSymbol + "</gold>";
+            case COINS -> "<green>" + coinSymbol + Money.format(amount) + "</green>";
             case COGS -> "<aqua>" + String.format(Locale.US, "%,d", amount) + " " + cogSymbol + "</aqua>";
         };
     }
