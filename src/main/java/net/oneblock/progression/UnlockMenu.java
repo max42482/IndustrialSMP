@@ -35,13 +35,21 @@ public final class UnlockMenu extends PagedMenu<MachineUnlocks.Unlock> {
             lore.add("<green>✔ Unlocked");
         } else {
             lore.add("<gray>Cost: " + Currency.COGS.format(u.cost()));
-            lore.add("<yellow>Click to unlock");
+            lore.add("<yellow>Left-click to unlock");
         }
+        lore.add("<aqua>Right-click to see the recipe");
         return withLore(u.icon().get(), lore);
     }
 
     @Override
     protected void onEntryClick(MachineUnlocks.Unlock u, InventoryClickEvent event) {
+        if (event.isRightClick()) {
+            new RecipeMenu(viewer, unlocks, u, this).openNextTick();
+            return;
+        }
+        if (u.free() || unlocks.has(viewer.getUniqueId(), u)) {
+            return;
+        }
         if (unlocks.unlock(viewer, u) == MachineUnlocks.Result.NO_COGS) {
             Text.send(viewer, "<red>You need " + Currency.COGS.format(u.cost()) + " <red>- cogs come from milestones.");
         }
